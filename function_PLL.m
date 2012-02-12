@@ -12,9 +12,11 @@ function [handles] = function_PLL(handles)
  fprintf('1 - Initializing the digital Phase-Locked-Loop\n');
  tonebin = strcat(handles.TonesPath,handles.TonesInput(1:39),'_tonebinning.txt');
  timebin = strcat(handles.TonesPath,handles.TonesInput(1:39),'_starttiming.txt');
- BW      = 2e3;%handles.tonebw;         % Output bandwidth of the tone, by default 2 kHz.
+ Nfft    = handles.tfft;    % Number of FFT
+ Tspan   = handles.ts;      % Time duration of the scan in [s] 
+ BW      = handles.tonebw;  % Tone BW input
+ BWn     = handles.tonebw_out;  % Tone BW output
  BWo     = 100;
- BWn     = 20;
  %fprintf('%s',tonebin);
  fid     = fopen(tonebin,'r');
  top     = fgetl(fid);
@@ -30,15 +32,13 @@ function [handles] = function_PLL(handles)
  fclose(fid);
  Start   = Tcinfo{1,2};       % Start should read the starttiming file from the SWspec
  Nscan   = str2double(handles.TonesInput(19:22));
- StarT   = Start; %+ 1200*Nscan;
+ StarT   = Start;       %+ 1200*Nscan;
  Flo     = 8411.99e6;
- Tspan   = handles.ts;  % Time duration of the scan in [s]
  Sr      = 2*BW;        % Sampling rate
  Nt      = Tspan*Sr;    % Number of samples in the input file
  Ovlp    = 2;           % Overlap factor to calculate spectra
  Nav     = 2;           % Number of spectra to average
  Padd    = 2;           % Padding value  
- Nfft    = handles.tfft;% Numberf of FFT points per sample
  dt      = 1/Sr;        % Time resolution
  df      = Sr/Nfft;     % Frequency resolution, (2*BW/NFFT) [0.2Hz]
  
@@ -77,7 +77,6 @@ function [handles] = function_PLL(handles)
  xSp   = mean(mean(Sp));
  Sp    = Sp./xSp;
  Spa   = sum(Sp)./Nspec;
- %fprintf(2,'ERROR: the bin is one offset to SVP');
  
  Dmaxa = FindMax(Spa,fs,BW*0.25,BW*0.75);
  Fmxa  = dfs.*(Dmaxa(2)-1);

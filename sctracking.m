@@ -501,7 +501,7 @@ end
 
 
 function number_files_Callback(hObject, eventdata, handles)
-    nfiles = str2double(get(handles.number_files,'String'));
+    handles.nfiles = str2double(get(handles.number_files,'String'));
     guidata(hObject,handles);
 end
 
@@ -515,7 +515,7 @@ end
 
 
 function tonebw_value_Callback(hObject, eventdata, handles)
-    tonebw = str2double(get(handles.tonebw_value,'String'));
+    handles.tonebw = str2double(get(handles.tonebw_value,'String'));
     guidata(hObject,handles);
 end
 
@@ -528,7 +528,7 @@ end
 
 
 function outputbw_value_Callback(hObject, eventdata, handles)
-    tonebw_out = str2double(get(handles.tonebw_out,'String'));
+    handles.tonebw_out = str2double(get(handles.outputbw_value,'String'));
     guidata(hObject,handles);
 end
 
