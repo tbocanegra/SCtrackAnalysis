@@ -1,1 +1,7 @@
-Initializing the S/C tracking tools
+SCtrackAnalysis is a Matlab tool with graphical user interface designed to analyse the results obtained with SWSpec and SCtracker. The scripts can also be used independently as data verification tools. The graphical interface allows the user to perform the data post-analysis with a single application. All the scripts have been developed and maintained at Metsähovi by Guifré Molera.
+
+The application accepts binary spectral data (32bits) with variable length, the extracted tone data in complex format (Real 32b and Imaginary 32b) and the apparent phase of the tone in ASCII format. The results can be plotted directly to the graphical interface, stored into files or printed in the screen.
+
+The input parameters for the application are fully configurable and they can be adjusted to the observing and/or processing mode used. Number of FFT points, number of scans, integration time, bandwidth, boundaries around the S/C tone (Fsmin and Fsmax) and order of the polynomial fit can be defined by the user.
+
+The main functionalities of the software are:•	Fast analysis of the generated spectra per integration time.•	Aggregate total spectra per the entire scan.•	Zoomed spectra around the S/C tone.•	Calculate the phase-polynomial coefficients for an m-order fit of freq det.•	Measure of the SNR detection per spectra.•	Measure of the SNR detection per spectra after second iteration (SCtracker).•	Verify the phase extracted from the S/C signal.•	Check the spectra in narrow-band of the S/C tone signal.
