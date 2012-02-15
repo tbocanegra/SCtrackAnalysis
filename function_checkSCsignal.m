@@ -52,7 +52,8 @@ function [handles] = function_checkSCsignal(handles)
  end
  
  handles.SNR  = SNR;
- handles.AverSpec = AverSpec/Nspec; 
+ handles.AverSpec = AverSpec/Nspec;
  fprintf ('SNR media: %d\n\n',mean(SNR));
  handles.mSNR = mean(SNR);
+ handles.AverSpec = handles.AverSpec/handles.mSNR;
 end

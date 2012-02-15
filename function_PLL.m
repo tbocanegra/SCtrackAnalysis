@@ -30,9 +30,8 @@ function [handles] = function_PLL(handles)
  top     = fgetl(fid);
  Tcinfo  = textscan(fid,'%f %f %f');
  fclose(fid);
- Start   = Tcinfo{1,2};       % Start should read the starttiming file from the SWspec
+ StarT   = Tcinfo{1,2};       % Start should read the starttiming file from the SWspec
  Nscan   = str2double(handles.TonesInput(19:22));
- StarT   = Start;       %+ 1200*Nscan;
  Flo     = 8411.99e6;
  Sr      = 2*BW;        % Sampling rate
  Nt      = Tspan*Sr;    % Number of samples in the input file
@@ -297,7 +296,7 @@ fprintf('    SNR     :  %f\n    dBSNR   :  %f\n',SNR,10*log10(SNR));
  
 fprintf('15 -  Clean the residual phase from noise\n');
 wto(1:Nto) = 1;
-Nppf       = 10;
+Nppf       = 20;
 PhFit      = PolyfitW(tto,dPhr,wto,Nppf);
 rdPhr      = dPhr-PhFit;
 
@@ -323,41 +322,41 @@ tps       = tps';
 save(Phase_fn,'tps','-ASCII','-double');
 
 
-fprintf('18 - Filtering again the data now to a band of 5 Hz\n');
-BWn   = 5;
-Ftarg = 0.5*BWn;
-Frot  = fmax - Ftarg;
+%fprintf('18 - Filtering again the data now to a band of 5 Hz\n');
+%BWn   = 5;
+%Ftarg = 0.5*BWn;
+%Frot  = fmax - Ftarg;
 %Frot  = Ftarg;
 
-sfc   = sfc.*exp(-2*pi*1i*Frot.*tto);
-ssf   = fft(sfc);
-ssfp  = abs(ssf).^2;
-xssfp = max(ssfp);
-ssfp  = ssfp/xssfp;
+%sfc   = sfc.*exp(-2*pi*1i*Frot.*tto);
+%ssf   = fft(sfc);
+%ssfp  = abs(ssf).^2;
+%xssfp = max(ssfp);
+%ssfp  = ssfp/xssfp;
 
 % Filter the signal with a band of 5 Hz.
-ssff(1:Nto)=0;
-for jj=1:Nto
-    if (fto(jj) < BWn)
-        ssff(jj) = ssf(jj);
-    end
-end
+%ssff(1:Nto)=0;
+%for jj=1:Nto
+%    if (fto(jj) < BWn)
+%        ssff(jj) = ssf(jj);
+%    end
+%end
 
 % Get the signal back to time-domain
-sfc   = ifft(ssff);
+%sfc   = ifft(ssff);
  
-fprintf('19 - Storing the tone signal for plotting later in 5 Hz band\n');
-handles.spa5  = ssfp;
-handles.fs5   = fto;
-handles.rsfc5 = real(sfc);
-handles.isfc5 = imag(sfc);
-handles.tto5  = tto;
+%fprintf('19 - Storing the tone signal for plotting later in 5 Hz band\n');
+%handles.spa5  = ssfp;
+%handles.fs5   = fto;
+%handles.rsfc5 = real(sfc);
+%handles.isfc5 = imag(sfc);
+%handles.tto5  = tto;
 
-fprintf('20 - Analysing the phase and frequency noise of the signal in 5 Hz band\n');
-Ampl  = abs(sfc);
-Ph    = angle(sfc);
-Phr   = DeWrap(Ph);
-dPhr5 = Phr - 2*pi*Ftarg.*tto;
+%fprintf('20 - Analysing the phase and frequency noise of the signal in 5 Hz band\n');
+%Ampl  = abs(sfc);
+%Ph    = angle(sfc);
+%Phr   = DeWrap(Ph);
+%dPhr5 = Phr - 2*pi*Ftarg.*tto;
 
 %fprintf('14 -  Check now the quality of the tone\n');
 %sfcc  = sfc.*exp(-1i.*dPhr5); % -1 looks good

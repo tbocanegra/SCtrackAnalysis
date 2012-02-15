@@ -82,7 +82,7 @@ function swmenu_Callback(hObject, eventdata, handles)
   elseif isequal(value, 5)
       hold off;
       plot(handles.tsp,handles.Fdet,'ro');hold on;plot(handles.tsp,handles.Ffit,'-b','LineWidth',1.5);
-      axis auto;grid on;xlim([0 max(handles.tspec)]);legend('Fdet','Pfit');
+      axis auto;grid on;xlim([0 max(handles.tsp)]);legend('Fdet','Pfit');
       xlabel('Scan time [s]','Fontsize',11,'fontname','Times New Roman');
       ylabel('Frequency [Hz]','fontsize',11,'fontname','Times New Roman');
       title('Frequency detections and polyfit function','fontsize',11,'fontname','Times New Roman');
@@ -408,16 +408,22 @@ function SaveCpps_Callback(hObject, eventdata, handles)
     %Cpp_filename_Callback(hObject, 0, handles);
     Cpr       = handles.Cpr0';
     Cfs       = handles.Cfs0';
+    timebin   = strcat(handles.SpectraPath,handles.SpectraInput(1:39),'_starttiming.txt');
+    fid       = fopen(timebin,'r');
+    top       = fgetl(fid);
+    Tcinfo    = textscan(fid,'%f %f %f');
+    fclose(fid);
+    Start   = Tcinfo{1,2};
     fdet      = zeros(handles.Nspec,4);
-    fdet(:,1) = handles.tsp;
+    fdet(:,1) = handles.tsp + Start;
     fdet(:,2) = handles.SNR;
     fdet(:,3) = handles.Fdet;
     fdet(:,4) = handles.rFit;
     handles.CppOutput = handles.SpectraInput(1:39);
-    save(strcat(handles.SpectraPath,handles.CppOutput,'.poly6.txt'),'Cpr','-ASCII','-double');
-    save(strcat(handles.SpectraPath,handles.CppOutput,'.X5cfs.txt'),'Cfs','-ASCII','-double');
+    save(strcat(handles.SpectraPath,handles.SpectraInput(1:39),'.poly6.txt'),'Cpr','-ASCII','-double');
+    save(strcat(handles.SpectraPath,handles.SpectraInput(1:39),'.X5cfs.txt'),'Cfs','-ASCII','-double');
     save(strcat(handles.SpectraPath,'Fdets.vex20',handles.SpectraInput(2:3),'.',handles.SpectraInput(4:5),'.',handles.SpectraInput(6:7),'.',handles.SpectraInput(9:10),'.',handles.SpectraInput(19:22),'.r0i.txt'),'fdet','-ASCII','-double'); 
-    fprintf('saving the Cpp coefficients to %s \n',handles.CppOutput);
+    fprintf('saving the Cpp coefficients to %s \n',[handles.SpectraInput(1:39),'.poly6.txt']);
     guidata(hObject,handles);
 end
 
