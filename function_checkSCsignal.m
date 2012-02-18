@@ -50,6 +50,7 @@ function [handles] = function_checkSCsignal(handles)
     SNR(k)       = (xfc(k,3) - rmsd(k,1))/rmsd(k,2);
     percent(k,Nspec);
  end
+ fclose(fid);
  
  handles.SNR  = SNR;
  handles.AverSpec = AverSpec/Nspec;

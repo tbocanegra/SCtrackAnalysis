@@ -26,6 +26,7 @@ function [handles] = function_PLL(handles)
  StopBin = Tbinfo{1,3};
  StartF  = Tbinfo{1,4}; % Frequency start
  StopF	 = Tbinfo{1,5};
+ fclose(fid);
  fid     = fopen(timebin,'r');
  top     = fgetl(fid);
  Tcinfo  = textscan(fid,'%f %f %f');
