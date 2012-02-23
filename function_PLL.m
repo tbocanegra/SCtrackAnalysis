@@ -314,8 +314,8 @@ fprintf('    SNR     :  %f\n    dBSNR   :  %f\n',SNR,10*log10(SNR));
 
 fprintf('17 -  dPhr is the final estimated residual phase\n');
 rdPhr     = rdPhr*-1;
-bin       = find(tto==15);
-bax       = find(tto==(Tspan-25)); % 1065
+bin       = find(tto==25);
+bax       = find(tto==(Tspan-15)); % 1065
 tps(1,:)  = tto(bin:bax);
 tps(2,:)  = rdPhr(bin:bax);
 Phase_fn  = strcat(handles.TonesPath,'Phases.vex20',handles.TonesInput(2:3),'.',handles.TonesInput(4:5),'.',handles.TonesInput(6:7),'.',handles.TonesInput(9:10),'.',handles.TonesInput(19:22),'.txt');

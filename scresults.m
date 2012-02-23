@@ -81,14 +81,14 @@ function pm_graph_Callback(hObject, eventdata, handles)
     end
     timebin = strcat(handles.fdets_path,handles.fdets_file(7),handles.fdets_file(12:13),handles.fdets_file(15:16),handles.fdets_file(18:19),'_',handles.fdets_file(21:22),'_MkIV_No0001_3200000pt_5s_ch1_starttiming.txt');
     fprintf('%s\n',timebin);
-    if(handles.fdets_file(7)=='r')
+    if(handles.fdets_file(7)=='r'|| handles.phase_file(8)=='r')
         satellite='RadioAstron';
-    elseif(handles.fdets_file(7)=='s')
-        satellite='Stereo A/B';
-     elseif(handles.fdets_file(7)=='v')
-         satellite='Venus Express';
-     end   
-     if isequal(Value, 1)
+    elseif(handles.fdets_file(7)=='s'|| handles.phase_file(8)=='s')
+       satellite='Stereo A/B';
+    elseif(handles.fdets_file(7)=='v' || handles.phase_file(8)=='v')
+           satellite='Venus Express';
+    end   
+    if isequal(Value, 1)
         fprintf('Option 1: Plotting Frequency detections\n');
         plot(handles.tts,handles.fdets,'bo'); grid on;
     elseif isequal(Value,2)
@@ -134,8 +134,9 @@ function pm_graph_Callback(hObject, eventdata, handles)
         filename = strcat('Fdets_',handles.fdets_file(18:19),handles.fdets_file(15:16),handles.fdets_file(10:13),'_',handles.fdets_file(21:22),'.pdf');
         print(f1,filename,'-dpdf','-r600');
     elseif isequal(Value,5)
-        fprint('Option 5: Plotting all the phases\n');
+        fprintf('Option 5: Plotting all the phases\n');
         plot(handles.tts,handles.Ph);
+        xlim auto; ylim auto;
     end
 end
 

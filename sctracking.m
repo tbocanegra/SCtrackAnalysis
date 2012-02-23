@@ -73,7 +73,9 @@ function swmenu_Callback(hObject, eventdata, handles)
   elseif isequal(value, 4)
       %set(gca,'Position',[0.13 0.18 0.85 0.72],'Units','normalized','fontsize',10,'fontname','Times New Roman');
       hold off;
-      semilogy(handles.ff,handles.AverSpec,'b');
+      mAverSpec = mean(handles.AverSpec);
+      AverSpec = handles.AverSpec/mAverSpec;
+      semilogy(handles.ff,AverSpec,'b');
       axis auto;grid on;
       xlim([handles.Fsmin handles.Fsmax]);
       title('Spacecraft spectra observed after phase stopping','fontsize',11,'fontname','Times New Roman');
@@ -136,7 +138,7 @@ function scmenu_Callback(hObject, eventdata, handles)
       plot(handles.tspec,handles.ToneSNR,'-bo','LineWidth',1,'MarkerSize',6); 
       grid on; xlim([0 max(handles.tspec)]);%ylim([0 10000]);
       t=handles.ToneSNR;
-      save('SNRPu.txt','t','-ASCII','-double');
+ %     save('SNRPu.txt','t','-ASCII','-double');
       title('SNR of the tone at 0.4 Hz resolution','FontSize',11,'FontName','Times New Roman');
       xlabel('Scan Time [s]','FontSize',11,'FontName','Times New Roman');
       ylabel('SNR','FontSize',11,'FontName','Times New Roman','Position',[-115 5000]);
@@ -405,7 +407,6 @@ function CalcCpp_Callback(hObject, eventdata, handles)
 end
 
 function SaveCpps_Callback(hObject, eventdata, handles)
-    %Cpp_filename_Callback(hObject, 0, handles);
     Cpr       = handles.Cpr0';
     Cfs       = handles.Cfs0';
     timebin   = strcat(handles.SpectraPath,handles.SpectraInput(1:39),'_starttiming.txt');
@@ -413,7 +414,7 @@ function SaveCpps_Callback(hObject, eventdata, handles)
     top       = fgetl(fid);
     Tcinfo    = textscan(fid,'%f %f %f');
     fclose(fid);
-    Start   = Tcinfo{1,2};
+    Start     = Tcinfo{1,2};
     fdet      = zeros(handles.Nspec,4);
     fdet(:,1) = handles.tsp + Start;
     fdet(:,2) = handles.SNR;

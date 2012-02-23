@@ -35,8 +35,8 @@ function [handles] = function_findCppCoef(handles)
 
  %data is extracted from the spectra but we only use certain bins
  for jj=1:Nspec
-	data     = fread(fid,[Nfft/2+1 1],'float32');
-	Sps(jj,:) = han(data(bfs:bfe-1));
+	data     = fread(fid,[Nfft/2+1 1],'float');
+    Sps(jj,:) = han(data(bfs:bfe-1));
  end
  
  fclose(fid);
