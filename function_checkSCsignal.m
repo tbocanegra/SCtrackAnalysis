@@ -19,8 +19,8 @@ function [handles] = function_checkSCsignal(handles)
  Fbw        = 1e3;				% noise bw to check SNR
  df         = 2*BW/fftpoints;
  Nfft       = fftpoints/2+1;
- jf         = 1:Nfft;
- ff         = df.*(jf-1);
+ jf         = 0:1:Nfft-1;
+ ff         = df.*jf;
  handles.ff = ff;
  
  xfc      = zeros(Nspec,3);
@@ -34,7 +34,6 @@ function [handles] = function_checkSCsignal(handles)
  handles.Spec     = zeros(2,Nfft);
  
  fid = fopen(fileName);
- size(handles.Spec)
  for k=1:Nspec
     data         = fread(fid,[Nfft 1],'float32');
     if (k==1) 

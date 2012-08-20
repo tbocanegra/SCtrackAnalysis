@@ -26,20 +26,11 @@ else
 end
 % End initialization code - DO NOT EDIT
 end
-
 % --- Executes just before scresults is made visible.
 function scresults_OpeningFcn(hObject, eventdata, handles, varargin)
-
 handles.output = hObject;
-
-% Update handles structure
 guidata(hObject, handles);
-
-% UIWAIT makes scresults wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
 end
-
-
 % --- Outputs from this function are returned to the command line.
 function varargout = scresults_OutputFcn(hObject, eventdata, handles) 
     varargout{1} = handles.output;
@@ -55,7 +46,7 @@ end
 
 % --- Executes on button press in pb_phase_if.
 function pb_phase_if_Callback(hObject, eventdata, handles)
- [handles.phase_file,handles.phase_path] = uigetfile('*.txt','Select the Fdets text file');
+ [handles.phase_file,handles.phase_path] = uigetfile('*.txt','Select the Phases text file');
  set(handles.phase_if,'String',handles.phase_file);
  handles = read_phase(handles);
  guidata(hObject, handles);
@@ -80,62 +71,67 @@ function pm_graph_Callback(hObject, eventdata, handles)
    %   set(gca,'Position',[0.11 0.18 0.84 0.72],'Units','normalized','fontsize',10,'fontname','Times New Roman');
     end
     timebin = strcat(handles.fdets_path,handles.fdets_file(7),handles.fdets_file(12:13),handles.fdets_file(15:16),handles.fdets_file(18:19),'_',handles.fdets_file(21:22),'_MkIV_No0001_3200000pt_5s_ch1_starttiming.txt');
-    fprintf('%s\n',timebin);
-    if(handles.fdets_file(7)=='r'|| handles.phase_file(8)=='r')
-        satellite='RadioAstron';
-    elseif(handles.fdets_file(7)=='s'|| handles.phase_file(8)=='s')
+    %fprintf('%s\n',timebin);
+    if(handles.fdets_file(7)=='r')
+       satellite='RadioAstron';
+    elseif(handles.fdets_file(7)=='s')
        satellite='Stereo A/B';
-    elseif(handles.fdets_file(7)=='v' || handles.phase_file(8)=='v')
-           satellite='Venus Express';
+    elseif(handles.fdets_file(7)=='v')
+       satellite='Venus Express';
+    elseif(handles.fdets_file(7)=='m')
+       satellite='Mars Express';
+    elseif(handles.fdets_file(7)=='g')
+       satellite='Glonass';
     end   
     if isequal(Value, 1)
         fprintf('Option 1: Plotting Frequency detections\n');
-        plot(handles.tts,handles.fdets,'bo'); grid on;
+        plot(handles.tts,handles.fdets,'bo'); 
+        grid on;
     elseif isequal(Value,2)
         fprintf('Option 2: Plotting Frequency residuals\n');
         plot(handles.tts,handles.rfdets,'bx');
-        %fprintf('Frequency residuals: %s \n',std(handles.rfdets));
         fprintf('Frequency residuals: %s \n',sqrt(mean(handles.rfdets.^2)));
-        ylim auto; xlim auto;
+        xlim auto; ylim auto;
         grid on;
     elseif isequal(Value,3)
-        fprintf('Option 3: Plotting Signal-to-Noise ratio\n');
+        fprintf('Option 3: Plotting the Spectrum peak\n');
+        plot(handles.tts,handles.Smax,'bx');
+        xlim auto; ylim auto;
+        grid on;
+    elseif isequal(Value,4)
+        fprintf('Option 4: Plotting the Signal-to-Noise ratio\n');
         plot(handles.tts,handles.SNR,'bx');
         fprintf('SNR: %s \n',mean(handles.SNR));
-        ylim([0 max(handles.SNR)*1.2]); grid on;
-    elseif isequal(Value,4)
+        xlim auto; ylim([0 max(handles.SNR)*1.2]); 
+    elseif isequal(Value,5)
         fprintf('Option 4: Plotting all 3 Fdets data\n');
-        f1 = figure;%figure('Position',[150 600 425 500]);%, 'Units', 'centimeters');
-        subplot(3,1,1);plot(handles.tts,handles.fdets,'bx','MarkerSize',3);grid on;
-        %text(min(handles.tts)+100,min(handles.fdets)+200, 'moi','HorizontalAlignment','center');
+        f1 = figure;
+        subplot(3,1,1); plot(handles.tts,handles.fdets,'bx','MarkerSize',3);grid on;
         Ta='Frequency detections, Stochastic Doppler noise and SNR of';
-        Ti=strcat(satellite,' observed with ',handles.fdets_file(21:22),' on ',handles.fdets_file(18:19),'.',handles.fdets_file(15:16),'.',handles.fdets_file(10:13));
-        title({Ta;Ti},'FontSize',11,'fontname','TimesNewRoman');
-        ylabel('Topoc. Freq. (Hz)');
-        ylim([min(handles.fdets)-100 max(handles.fdets)+100]);
-        xlim([min(handles.tts)*0.95 max(handles.tts)*1.05]);
-       % set(gca,'Position',[10 200 400 300],'fontsize',10,'fontname','Times New Roman');
-        subplot(3,1,2);plot(handles.tts,handles.rfdets,'rx','MarkerSize',3);grid on;
-        ylabel('Doppler Noise (Hz)');
-        ylim auto;
-        xlim([min(handles.tts)*0.95 max(handles.tts)*1.05]);
-        text(2,3, 'moi','HorizontalAlignment','center');
-        subplot(3,1,3);plot(handles.tts,handles.SNR,'kx','MarkerSize',3);grid on;
-        ylim([0 max(handles.SNR)*1.2]);ylabel('SNR');xlabel('Time from 00:00 UTC (s) ');
+        Ti=strcat(satellite,'{ observed with }',handles.fdets_file(21:22),'{ on }',handles.fdets_file(18:19),'.',handles.fdets_file(15:16),'.',handles.fdets_file(10:13));
+        title({Ta;Ti},'FontSize',13,'fontname','TimesNewRoman');
+        ylim([min(handles.fdets)-250 max(handles.fdets)+250]); ylabel('Topoc. Freq. (Hz)','fontname','TimesNewRoman','FontSize',12);
+        xlim([min(handles.tts)-100 max(handles.tts)+100]);
+        subplot(3,1,2); plot(handles.tts,handles.rfdets,'rx','MarkerSize',3);grid on;
+        ylim auto; ylabel('Doppler Noise (Hz)','fontname','TimesNewRoman','FontSize',12);
+        xlim([min(handles.tts)-100 max(handles.tts)+100]);
+        subplot(3,1,3); plot(handles.tts,handles.SNR,'kx','MarkerSize',3);
+        grid on;
+        ylim([0 max(handles.SNR)*1.2]); ylabel('SNR','fontname','TimesNewRoman','FontSize',12);
+        xlim([min(handles.tts)-100 max(handles.tts)+100]);
+        xlabel('Time from 00:00 UTC (s)','fontname','TimesNewRoman','FontSize',12);
         fprintf('Frequency residuals: %s \n',sqrt(mean(handles.rfdets.^2)));
         fprintf('SNR: %s \n',mean(handles.SNR));
-        xlim([min(handles.tts)*0.95 max(handles.tts)*1.05]);
         deltaF  = strcat('Freq range:',mat2str((max(handles.fdets)-min(handles.fdets)),1), ' Hz');
         rdF     = strcat('RMS: ',mat2str((std(handles.rfdets)*1000),1),'mHz in 5s');
         snr     = strcat('mean: ',mat2str(mean(handles.SNR),1),' in 5s');
         uicontrol('Parent', f1, 'Style','text','units','normalized','Position',[0.65 0.85 0.25 0.03],'BackgroundColor','w','fontname','Arial','FontSize',11,'String',deltaF);
         uicontrol('Parent', f1, 'Style','text','units','normalized','Position',[0.65 0.55 0.25 0.03],'BackgroundColor','w','fontname','Arial','FontSize',11,'String',rdF);
         uicontrol('Parent', f1, 'Style','text','units','normalized','Position',[0.65 0.25 0.25 0.03],'BackgroundColor','w','fontname','Arial','FontSize',11,'String',snr);
-        filename = strcat('Fdets_',handles.fdets_file(18:19),handles.fdets_file(15:16),handles.fdets_file(10:13),'_',handles.fdets_file(21:22),'.pdf');
-        print(f1,filename,'-dpdf','-r600');
-    elseif isequal(Value,5)
-        fprintf('Option 5: Plotting all the phases\n');
-        plot(handles.tts,handles.Ph);
+        %filename = strcat('Fdets_',handles.fdets_file(18:19),handles.fdets_file(15:16),handles.fdets_file(10:13),'_',handles.fdets_file(21:22),'.pdf');
+    elseif isequal(Value,6)
+        fprintf('Option 5: Plotting the phase from one scan\n');
+        plot(handles.ts,handles.Ph);
         xlim auto; ylim auto;
     end
 end
@@ -154,27 +150,30 @@ function pb_merge_fdets_Callback(hObject, eventdata, handles)
     fprintf('\n Merge the frequency detections from an observation\n');
     nfiles = str2double(get(handles.nfiles,'String'));
     kk = 0;
+    tlines = 0;
     for ii=1:nfiles
         if (ii < 10)
             FdetsFile = strcat(handles.fdets_file(1:22),'.000',int2str(ii),handles.fdets_file(28:35));
-        else
+        elseif (ii < 100)
             FdetsFile = strcat(handles.fdets_file(1:22),'.00',int2str(ii),handles.fdets_file(28:35));
+        else
+            FdetsFile = strcat(handles.fdets_file(1:22),'.0',int2str(ii),handles.fdets_file(28:35));
         end
         fprintf('%s',FdetsFile);
         FdetsName = strcat(handles.fdets_path,FdetsFile);
         if ( exist(FdetsName,'file') > 0 )
             txt_file = textread(FdetsName);
-            Fdets(kk*length(txt_file)+1:(kk+1)*length(txt_file),1:4) = txt_file;
-            kk = kk + 1;
+            Fdets(tlines+1:tlines+length(txt_file),1:5) = txt_file;
+            tlines = length(txt_file) + tlines;
+            clear txt_file;
             fprintf(' OK \n');
         else
             fprintf(2,' Not Found\n');
         end
         clear txt_file;
     end
-    save(strcat(handles.fdets_path,handles.fdets_file(1:22),handles.fdets_file(28:35)),'Fdets','-ASCII','-double');    
+    save(strcat(handles.fdets_path,handles.fdets_file(1:22),handles.fdets_file(28:35)),'Fdets','-ASCII','-double');
     fprintf(strcat(handles.fdets_file(1:22),handles.fdets_file(28:35)),'\n\n');
-
 end
 
 % --- Executes on button press in pb_merge_phase.
@@ -184,9 +183,11 @@ function pb_merge_phase_Callback(hObject, eventdata, handles)
     kk = 0;
     for ii=1:nfiles
         if (ii < 10)
-            PhaseFile = strcat(handles.phase_file(1:27),int2str(ii),'.txt');
+            PhaseFile = strcat(handles.phase_file(1:23),'.000',int2str(ii),'.txt');
+        elseif (ii < 100)
+            PhaseFile = strcat(handles.phase_file(1:23),'.00',int2str(ii),'.txt');
         else
-            PhaseFile = strcat(handles.phase_file(1:26),int2str(ii),'.txt');
+            PhaseFile = strcat(handles.phase_file(1:23),'.0',int2str(ii),'.txt');
         end
         fprintf('  %s',PhaseFile);
         PhaseName = strcat(handles.phase_path,PhaseFile);

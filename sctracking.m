@@ -65,8 +65,8 @@ function swmenu_Callback(hObject, eventdata, handles)
       xlabel('VideoBand frequency','fontsize',11,'fontname','Times New Roman');
       ylabel('Power','fontsize',11,'fontname','Times New Roman');     
   elseif isequal(value, 3)
-      hold off;
-      semilogy(handles.ff,handles.AverSpec,'b');
+     % hold off;
+      semilogy(handles.ff,handles.AverSpec,'r');
       grid on; axis auto;xlim([0 handles.BW]);%ylim([10^8 10^11]);
       xlabel('VideoBand frequency','fontsize',11,'fontname','Times New Roman');ylabel('Power','fontsize',11,'fontname','Times New Roman');
       title('Average spectral power','fontsize',11,'fontname','Times New Roman');
@@ -83,7 +83,8 @@ function swmenu_Callback(hObject, eventdata, handles)
       ylabel('Power spectra','FontSize',11,'FontName','Times New Roman');
   elseif isequal(value, 5)
       hold off;
-      plot(handles.tsp,handles.Fdet,'ro');hold on;plot(handles.tsp,handles.Ffit,'-b','LineWidth',1.5);
+      plot(handles.tsp,handles.Fdet,'ro');hold on;
+      plot(handles.tsp,handles.Ffit,'-b','LineWidth',1.5);
       axis auto;grid on;xlim([0 max(handles.tsp)]);legend('Fdet','Pfit');
       xlabel('Scan time [s]','Fontsize',11,'fontname','Times New Roman');
       ylabel('Frequency [Hz]','fontsize',11,'fontname','Times New Roman');
@@ -99,13 +100,21 @@ function swmenu_Callback(hObject, eventdata, handles)
       hold off;
       %set(gca,'Position',[0.13 0.18 0.8 0.72],'Units','normalized','fontsize',10,'fontname','Times New Roman');
       axis auto;
-      plot(0:5:(handles.Nspec-1)*5,handles.SNR,'r');
-      ylim([-10 max(handles.SNR)+100]);xlim([0 handles.Nspec*5]);
+      plot(0:handles.dts:(handles.Nspec-1)*handles.dts,handles.SNR,'r');
+      ylim([-10 max(handles.SNR)+100]);xlim([0 handles.Nspec]);
       title('SNR detection of the tone at 5 Hz','fontsize',11,'fontname','Times New Roman');
       xlabel('Scan time [s]','fontsize',11,'fontname','Times New Roman');
       ylabel('SNR','fontsize',11,'fontname','Times New Roman','Position',[-110 1500]);
       label = strcat('mSNR : ',num2str(handles.mSNR,5));
       text(20,300,label,'fontsize',10);grid on;
+  elseif isequal(value, 8)
+      hold off;
+      size(0:handles.dts:handles.Nspec-1)
+      size(handles.Smax)
+      plot(0:handles.dts:(handles.Nspec-1)*handles.dts,handles.Smax,'b');
+      title('Spectral peak at each spectrum','fontsize',11,'fontname','Times New Roman');
+      xlabel('Scan time [s]','fontsize',11,'fontname','Times New Roman');
+      ylabel('Spectral peak','fontsize',11,'fontname','Times New Roman');
   end
 end
 
@@ -126,9 +135,12 @@ function scmenu_Callback(hObject, eventdata, handles)
       ylabel('Relative power','FontSize',11,'FontName','Times New Roman');
   elseif isequal(Value, 2)
       hold off;
+      df = handles.tfft/handles.tonebw;
+      df
       semilogy(handles.fs,handles.Spa,'bx');
+      [x,y] = max(handles.Spa);
       axis auto;
-      xlim([1000.75-5 1000.75+5]);
+      xlim([y/df-50 y/df+50]);
       title('Tone zoom of the narrow band','fontsize',11,'fontname','Times New Roman');
       xlabel('Frequency [Hz]','fontsize',11,'fontname','Times New Roman');
       ylabel('Relative power','fontsize',11,'fontname','Times New Roman');
@@ -168,17 +180,17 @@ function scmenu_Callback(hObject, eventdata, handles)
       ylabel('Spectra power','fontsize',11,'fontname','Times New Roman'); 
   elseif isequal(Value,7) % Tone spectra at 5 Hz
       hold off;
-      semilogy(handles.fs5,handles.spa5,'-b');
-      xlim([0 5]);ylim([1e-10 max(handles.spa5)]);
- 	  title('Spacecraft tone in 5 Hz bandwidth','fontsize',11,'fontname','Times New Roman');
-	  xlabel('Frequency band [Hz]','fontsize',11,'fontname','Times New Roman');ylabel('Spectra power','fontsize',11,'fontname','Times New Roman'); 
+      semilogy(handles.fs20,handles.spa20,'-b');
+      xlim([0 5]);ylim([1e-10 max(handles.spa20)]);
+ 	  %title('Spacecraft tone in 5 Hz bandwidth','fontsize',11,'fontname','Times New Roman');
+	  %xlabel('Frequency band [Hz]','fontsize',11,'fontname','Times New Roman');ylabel('Spectra power','fontsize',11,'fontname','Times New Roman'); 
       %label = strcat('std dev:',num2str(std(handles.SCrfit)));
       %%text(1,1,label,'fontsize',12);grid on;
   elseif isequal(Value,8) % Real and Imaginary part at 5 Hz
       hold off;grid on;
-      plot(handles.tto,handles.rsfc5,'b');hold on;plot(handles.tto,handles.isfc5,'r');
-      xlim([15 20]);
- 	  title('Filtered 5 Hz time-domain signal','fontsize',11,'fontname','Times New Roman');
+      plot(handles.tto,handles.rsfc,'b');hold on;plot(handles.tto,handles.isfc,'r');
+      xlim([15 16]);
+ 	  title('Filtered 20 Hz time-domain signal','fontsize',11,'fontname','Times New Roman');
 	  xlabel('Time [s]','fontsize',11,'fontname','Times New Roman');ylabel('Signal','fontsize',11,'fontname','Times New Roman');
       legend('Real','Imag');
   elseif isequal(Value,9) % Signal phase and polynomial fit
@@ -191,7 +203,8 @@ function scmenu_Callback(hObject, eventdata, handles)
       legend('Phase','Phase fit');
   elseif isequal(Value,10) % Residual phase
       hold off;std(handles.rdPhr);
-      plot(handles.tto,handles.rdPhr,'b');xlim([15 1060]);grid on;
+      plot(handles.tto,handles.rdPhr,'b');grid on;
+      xlim([15 max(handles.tto)-15]); ylim auto;
       title('Residual phase detected in 20 Hz band','fontsize',11,'fontname','Times New Roman');
 	  xlabel('Time [s]','fontsize',11,'fontname','Times New Roman','Position',[500 -1.22]);
       ylabel('Phase [rad]','fontsize',11,'fontname','Times New Roman','Position',[-65 0]);
@@ -407,24 +420,26 @@ function CalcCpp_Callback(hObject, eventdata, handles)
 end
 
 function SaveCpps_Callback(hObject, eventdata, handles)
-    Cpr       = handles.Cpr0';
-    Cfs       = handles.Cfs0';
-    timebin   = strcat(handles.SpectraPath,handles.SpectraInput(1:39),'_starttiming.txt');
+    Cpr       = handles.Cpr0;
+    Cfs       = handles.Cfs0;
+    file_lng  = 38;
+    timebin   = strcat(handles.SpectraPath,handles.SpectraInput(1:file_lng),'_starttiming.txt');
     fid       = fopen(timebin,'r');
     top       = fgetl(fid);
     Tcinfo    = textscan(fid,'%f %f %f');
     fclose(fid);
     Start     = Tcinfo{1,2};
-    fdet      = zeros(handles.Nspec,4);
+    fdet      = zeros(handles.Nspec,5);
     fdet(:,1) = handles.tsp + Start;
     fdet(:,2) = handles.SNR;
-    fdet(:,3) = handles.Fdet;
-    fdet(:,4) = handles.rFit;
-    handles.CppOutput = handles.SpectraInput(1:39);
-    save(strcat(handles.SpectraPath,handles.SpectraInput(1:39),'.poly6.txt'),'Cpr','-ASCII','-double');
-    save(strcat(handles.SpectraPath,handles.SpectraInput(1:39),'.X5cfs.txt'),'Cfs','-ASCII','-double');
+    fdet(:,3) = handles.Smax;
+    fdet(:,4) = handles.Fdet;
+    fdet(:,5) = handles.rFit;
+    handles.CppOutput = handles.SpectraInput(1:file_lng);
+    save(strcat(handles.SpectraPath,handles.SpectraInput(1:file_lng),'.poly',num2str(handles.Npol),'.txt'),'Cpr','-ASCII','-double');
+    save(strcat(handles.SpectraPath,handles.SpectraInput(1:file_lng),'.X5cfs.txt'),'Cfs','-ASCII','-double');
     save(strcat(handles.SpectraPath,'Fdets.vex20',handles.SpectraInput(2:3),'.',handles.SpectraInput(4:5),'.',handles.SpectraInput(6:7),'.',handles.SpectraInput(9:10),'.',handles.SpectraInput(19:22),'.r0i.txt'),'fdet','-ASCII','-double'); 
-    fprintf('saving the Cpp coefficients to %s \n',[handles.SpectraInput(1:39),'.poly6.txt']);
+    fprintf('saving the Cpp coefficients to %s \n',[handles.SpectraInput(1:file_lng),'.poly',num2str(handles.Npol),'.txt']);
     guidata(hObject,handles);
 end
 
@@ -526,7 +541,6 @@ function tonebw_value_Callback(hObject, eventdata, handles)
     guidata(hObject,handles);
 end
 
-% --- Executes during object creation, after setting all properties.
 function tonebw_value_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
@@ -539,9 +553,43 @@ function outputbw_value_Callback(hObject, eventdata, handles)
     guidata(hObject,handles);
 end
 
-% --- Executes during object creation, after setting all properties.
 function outputbw_value_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+end
+
+function interbw_value_Callback(hObject, eventdata, handles)
+    handles.tonebw_if = str2double(get(handles.interbw_value,'String'));
+    guidata(hObject,handles);
+end
+
+function interbw_value_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+end
+
+function Npol2_box_Callback(hObject, eventdata, handles)
+    handles.Npol2 = str2double(get(handles.Npol2_box,'String'));
+    guidata(hObject,handles);
+end
+
+function Npol2_box_CreateFcn(hObject, eventdata, handles)
+ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+     set(hObject,'BackgroundColor','white');
+ end
+end
+
+function skip_value_Callback(hObject, ~, handles)
+    handles.skip = str2double(get(handles.Npol2_box,'String'));
+    guidata(hObject,handles);
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function skip_value_CreateFcn(hObject, ~, handles)
+ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+ end
 end

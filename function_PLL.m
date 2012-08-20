@@ -9,31 +9,43 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [handles] = function_PLL(handles)
+ file_lng  = 38;
  fprintf('1 - Initializing the digital Phase-Locked-Loop\n');
- tonebin = strcat(handles.TonesPath,handles.TonesInput(1:39),'_tonebinning.txt');
- timebin = strcat(handles.TonesPath,handles.TonesInput(1:39),'_starttiming.txt');
- Nfft    = handles.tfft;    % Number of FFT
- Tspan   = handles.ts;      % Time duration of the scan in [s] 
- BW      = handles.tonebw;  % Tone BW input
- BWn     = handles.tonebw_out;  % Tone BW output
- BWo     = 100;
+ tonebin   = strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'_tonebinning.txt');
+ timebin   = strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'_starttiming.txt');
+ Nfft      = handles.tfft;        % Number of FFT
+ Tspan     = handles.ts;          % Time duration of the scan in [s]
+ BandWidth = handles.BW;          % Original bandwidth  
+ BW        = handles.tonebw;      % Tone BW input
+ BWn       = handles.tonebw_out;  % Tone BW output
+ BWo       = handles.tonebw_if;   % Intermediate filtering
+ Npf       = handles.Npol2;       % Order of the 2nd Polynomials
+ 
  %fprintf('%s',tonebin);
- fid     = fopen(tonebin,'r');
- top     = fgetl(fid);
- Tbinfo  = textscan(fid,'%f %f %f %f %f');
- ToneNr  = Tbinfo{1,1};
- StartBin= Tbinfo{1,2};
- StopBin = Tbinfo{1,3};
- StartF  = Tbinfo{1,4}; % Frequency start
- StopF	 = Tbinfo{1,5};
+ fid = fopen(tonebin,'r');
+  fgetl(fid);
+  Tbinfo = textscan(fid,'%f %f %f %f %f');
  fclose(fid);
+ StartF = Tbinfo{1,4}; % Frequency start
+ %ToneNr=Tbinfo{1,1};StartBin=Tbinfo{1,2};StopBin=Tbinfo{1,3};StopF=Tbinfo{1,5};
+
+ if (handles.TonesInput(1) == 'v')
+     spacecraft = 'vex';
+ elseif (handles.TonesInput(1) == 'r')
+     spacecraft = 'ras';
+ elseif (handles.TonesInput(1) == 'g')
+     spacecraft = 'gns';
+ elseif (handles.TonesInput(1) == 'm')
+     spacecraft = 'mex';
+ end
+ 
  fid     = fopen(timebin,'r');
- top     = fgetl(fid);
- Tcinfo  = textscan(fid,'%f %f %f');
+  fgetl(fid);
+  Tcinfo  = textscan(fid,'%f %f %f');
  fclose(fid);
+ 
  StarT   = Tcinfo{1,2};       % Start should read the starttiming file from the SWspec
  Nscan   = str2double(handles.TonesInput(19:22));
- Flo     = 8411.99e6;
  Sr      = 2*BW;        % Sampling rate
  Nt      = Tspan*Sr;    % Number of samples in the input file
  Ovlp    = 2;           % Overlap factor to calculate spectra
@@ -41,6 +53,7 @@ function [handles] = function_PLL(handles)
  Padd    = 2;           % Padding value  
  dt      = 1/Sr;        % Time resolution
  df      = Sr/Nfft;     % Frequency resolution, (2*BW/NFFT) [0.2Hz]
+ skip    = 1;           % Skip n scans at the beginning
  
  jt      = 0:1:Nt-1;
  tw      = dt*Nfft;
@@ -48,9 +61,17 @@ function [handles] = function_PLL(handles)
  ff      = 0:Sr/Nfft:Sr-1/Nfft;
  
  fprintf('2 - Read the the first polynomials coefficients\n');
- Cpr0    = textread(strcat(handles.TonesPath,handles.TonesInput(1:39),'.poly6.txt'));
- Cfs0    = textread(strcat(handles.TonesPath,handles.TonesInput(1:39),'.X5cfs.txt'));
  
+ fid = fopen(strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.poly6.txt'));
+  Cell = textscan(fid,'%f');
+  Cpr0 = Cell{1};
+ fclose(fid);
+ 
+ fid = fopen(strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.X5cfs.txt'));
+  Cell = textscan(fid,'%f');
+  Cfs0 = Cell{1};
+ fclose(fid);
+
  Nspav = Nav*Ovlp-(Ovlp-1);     % Number of spectra to average
  Nspec = floor(Nt/(Nfft*Nav));  % Number of spectra processed
  jspec = 0:1:Nspec-1;
@@ -89,30 +110,32 @@ function [handles] = function_PLL(handles)
  fprintf('4 - Detect the frequency of the spacecraft tone\n');
  FsearchMin    = min(fsx);
  FsearchMax    = max(fsx);
- HalfWindow    = 40;%40
- LineAvoidance = 10;%10
+ HalfWindow    = 40;
+ LineAvoidance = 10;
  xf            = zeros(Nspec,3);
  rmsd          = zeros(Nspec,3);
+
  dxc(1:Nspec)  = 0;
  SNR(1:Nspec)  = 0;
-
- for jj=1:Nspec
-    xf(jj,:)  = FindMax(Sp(jj,:),fs,FsearchMin,FsearchMax);
-    dxc(jj)   = PowCenter(Sp(jj,:),xf(jj,2),5);
+ Smax(1:Nspec) = 0;
+ 
+ for jj=skip:Nspec
+    xf(jj,:)   = FindMax(Sp(jj,:),fs,FsearchMin,FsearchMax);
+    Smax(jj)   = xf(jj,3);
+    dxc(jj)    = PowCenter(Sp(jj,:),xf(jj,2),5);
  end
 
  dxc           = dxc.*dfs;
  Fdet          = dfs.*(xf(:,2)-1);
  FdetZ         = Fdet + dxc';
  
- for jj=1:Nspec
-   rmsd(jj,:) = GetRMS(Sp(jj,:),fs,FdetZ(jj),HalfWindow,LineAvoidance);
-   SNR(jj)    = (xf(jj,3) - rmsd(jj,1))/rmsd(jj,2);
+ for jj=skip:Nspec
+   rmsd(jj,:)  = GetRMS(Sp(jj,:),fs,FdetZ(jj),HalfWindow,LineAvoidance);
+   SNR(jj)     = (xf(jj,3) - rmsd(jj,1))/rmsd(jj,2);
  end
  
  fprintf('5 - Create the second phase polynomials model\n');
  Weight    = SNR.^2;
- Npf       = 5;
  Npp       = Npf + 1;
  Ffit      = PolyfitW1(tspec,Fdet,Weight,Npf);
  rFdet     = Fdet' - Ffit;
@@ -122,7 +145,7 @@ function [handles] = function_PLL(handles)
  fprintf('6 - Store the frequency detections, residuals and SNR\n');
  ToneSNR   = SNR;               % Store the SNR values to plot the results later
  tts       = tspec + StarT;     % time of the spectra + time beg of scan
- fdets     = zeros(Nspec,4);
+
 
  Cfs1(1:Npp)     = 0;
  Cpr1(1:Npp+1)   = 0;
@@ -136,6 +159,11 @@ function [handles] = function_PLL(handles)
 Cpr1    = Cpr1';
 Cfs1    = Cfs1';
 Fpolys  = Cfs0';
+Npp0    = numel(Fpolys);
+
+if (Npp0<Npp)
+    Fpolys(Npp0+1:Npp)=0;
+end
 
 for jspec=1:Nspec
     for jj=2:Npp
@@ -143,19 +171,21 @@ for jspec=1:Nspec
     end
 end
 
-Fvideo = StartF + Ffit + Ffirst;
+Fvideo = StartF + Ffirst + Fdet';
 
 % Fvideo includes the 1st polynomials the FdetZ only the second approach
-fdets(:,1)= tts;               % fdets store spectra time
-fdets(:,2)= SNR;               %             SNR
-fdets(:,3)= Fvideo;             %  (FdetZ)    frequency detections
-fdets(:,4)= rFdet;             %             residual frequency
-fdets_fn = strcat(handles.TonesPath,'Fdets.vex20',handles.TonesInput(2:3),'.',handles.TonesInput(4:5),'.',handles.TonesInput(6:7),'.',handles.TonesInput(9:10),'.',handles.TonesInput(19:22),'.r2i.txt');
+fdets     = zeros(Nspec,5);
+fdets(:,1)= tts;                % fdets store spectra time
+fdets(:,2)= SNR;                %             SNR
+fdets(:,3)= Smax;               % Spectral MAX
+fdets(:,4)= Fvideo;             %  (FdetZ)    frequency detections
+fdets(:,5)= rFdet;              %             residual frequency
+fdets_fn = strcat(handles.TonesPath,'Fdets.',spacecraft,'20',handles.TonesInput(2:3),'.',handles.TonesInput(4:5),'.',handles.TonesInput(6:7),'.',handles.TonesInput(9:10),'.',handles.TonesInput(19:22),'.r2i.txt');
 save(fdets_fn,'fdets','-ASCII','-double');
 
 fprintf('7 - Store the coefficients of the second polynomials\n');
-save(strcat(handles.TonesPath,handles.TonesInput(1:39),'.poly6.rev2.txt'),'Cpr1','-ASCII','-double');
-save(strcat(handles.TonesPath,handles.TonesInput(1:39),'.X5cfs.rev2.txt'),'Cfs1','-ASCII','-double');
+save(strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.poly6.rev2.txt'),'Cpr1','-ASCII','-double');
+save(strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.X5cfs.rev2.txt'),'Cfs1','-ASCII','-double');
 
 fprintf('8 - Integrate the phase and filters the signal using a decimation ratio of 1:100\n');
 FO      = floor(BW/BWo);
@@ -181,7 +211,6 @@ for jj=1:Npf
     Cf0(jj) = Cpr0(jj+1)*jj/(2*pi);
     Cf1(jj) = Cpr1(jj+1)*jj/(2*pi);
 end
-
 Cf    = Cf0 + Cf1;
 Cf(1) = Cf1(1);
 Cpp(1:Npp+1) = 0;
@@ -206,7 +235,7 @@ end
 % that this coeff will be +1, -1 or even complex
 
 Bsc     = floor((Fcc-BWoh)/df);
-Bec     = Bsc+Npfo-1;
+Bec     = floor(Bsc+Npfo-1);
 Fstartc = Bsc*df;
 Pssc    = Fstartc*Oshifti*dt - floor(Fstartc*Oshifti*dt);
 Esc     = exp(1i*2*pi*Pssc);
@@ -297,7 +326,7 @@ fprintf('    SNR     :  %f\n    dBSNR   :  %f\n',SNR,10*log10(SNR));
  
 fprintf('15 -  Clean the residual phase from noise\n');
 wto(1:Nto) = 1;
-Nppf       = 20;
+Nppf       = 10;
 PhFit      = PolyfitW(tto,dPhr,wto,Nppf);
 rdPhr      = dPhr-PhFit;
 
@@ -314,11 +343,11 @@ fprintf('    SNR     :  %f\n    dBSNR   :  %f\n',SNR,10*log10(SNR));
 
 fprintf('17 -  dPhr is the final estimated residual phase\n');
 rdPhr     = rdPhr*-1;
-bin       = find(tto==25);
+bin       = find(tto==20);%40 and 15
 bax       = find(tto==(Tspan-15)); % 1065
 tps(1,:)  = tto(bin:bax);
 tps(2,:)  = rdPhr(bin:bax);
-Phase_fn  = strcat(handles.TonesPath,'Phases.vex20',handles.TonesInput(2:3),'.',handles.TonesInput(4:5),'.',handles.TonesInput(6:7),'.',handles.TonesInput(9:10),'.',handles.TonesInput(19:22),'.txt');
+Phase_fn  = strcat(handles.TonesPath,'Phases.',spacecraft,'20',handles.TonesInput(2:3),'.',handles.TonesInput(4:5),'.',handles.TonesInput(6:7),'.',handles.TonesInput(9:10),'.',handles.TonesInput(19:22),'.txt');
 tps       = tps';
 save(Phase_fn,'tps','-ASCII','-double');
 
@@ -408,6 +437,8 @@ handles.PhFit  = PhFit;
 handles.dPhr   = dPhr;
 handles.rdPhr  = rdPhr;
 handles.sf     = sf;
+handles.rsfc   = real(sfc);
+handles.isfc   = imag(sfc);
 handles.tto    = tto;
 handles.fto    = fto;
 handles.ssfp   = ssfp;
