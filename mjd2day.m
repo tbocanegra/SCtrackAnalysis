@@ -1,3 +1,5 @@
-function [hh,mm] = mjd2day(mjd)
-    hh = mjd
+function [yy,mm,dd] = mjd2day(mjd)
+    yy = mjd;
+    mm = mjd;
+    dd = mjd;
 end
