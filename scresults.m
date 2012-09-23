@@ -149,7 +149,7 @@ end
 function pb_merge_fdets_Callback(hObject, eventdata, handles)
     fprintf('\n Merge the frequency detections from an observation\n');
     nfiles = str2double(get(handles.nfiles,'String'));
-    kk = 0;
+    kk     = 0;
     tlines = 0;
     for ii=1:nfiles
         if (ii < 10)
@@ -162,18 +162,32 @@ function pb_merge_fdets_Callback(hObject, eventdata, handles)
         fprintf('%s',FdetsFile);
         FdetsName = strcat(handles.fdets_path,FdetsFile);
         if ( exist(FdetsName,'file') > 0 )
-            txt_file = textread(FdetsName);
-            Fdets(tlines+1:tlines+length(txt_file),1:5) = txt_file;
-            tlines = length(txt_file) + tlines;
+            fid    = fopen(FdetsFile,'r');
+            txt_file = textscan(fid,'%f %f %f %f %f','Headerlines',4);
+            mat_file = cell2mat(txt_file);
+            Fdets(tlines+1:tlines+length(mat_file),1:5) = mat_file;
+            tlines = length(mat_file) + tlines;
             clear txt_file;
+            fclose(fid);
             fprintf(' OK \n');
         else
             fprintf(2,' Not Found\n');
         end
         clear txt_file;
     end
-    save(strcat(handles.fdets_path,handles.fdets_file(1:22),handles.fdets_file(28:35)),'Fdets','-ASCII','-double');
-    fprintf(strcat(handles.fdets_file(1:22),handles.fdets_file(28:35)),'\n\n');
+    fprintf('\n');
+    FdetsFile = strcat(handles.fdets_path,handles.fdets_file(1:22),handles.fdets_file(28:35));
+    
+    fid = fopen(FdetsFile,'w+');
+    fprintf(fid,'* Observation conducted on %s at %s rev. %s\n',handles.fdets_file(10:19),handles.fdets_file(21:22),handles.fdets_file(30));
+    fprintf(fid,'* Base frequency: 8415.99 MHz \n');
+    fprintf(fid,'* Format : Time(UTC) [s]  | Signal-to-Noise ratio  |       Spectral max     |  Freq. detection [Hz]  |  Doppler noise [Hz] \n',handles.fdets_file(10:19));
+    fprintf(fid,'* \n');
+    fclose(fid);
+    
+    save(FdetsFile,'Fdets','-ASCII','-double','-append');
+    fprintf(strcat(handles.fdets_file(1:22),handles.fdets_file(28:35)));
+    fprintf('\n');
 end
 
 % --- Executes on button press in pb_merge_phase.

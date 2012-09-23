@@ -422,7 +422,8 @@ end
 function SaveCpps_Callback(hObject, eventdata, handles)
     Cpr       = handles.Cpr0;
     Cfs       = handles.Cfs0;
-    file_lng  = 38;
+    Tskip     = handles.skip;
+    file_lng  = 39;
     timebin   = strcat(handles.SpectraPath,handles.SpectraInput(1:file_lng),'_starttiming.txt');
     fid       = fopen(timebin,'r');
     top       = fgetl(fid);
@@ -430,7 +431,7 @@ function SaveCpps_Callback(hObject, eventdata, handles)
     fclose(fid);
     Start     = Tcinfo{1,2};
     fdet      = zeros(handles.Nspec,5);
-    fdet(:,1) = handles.tsp + Start;
+    fdet(:,1) = handles.tsp + Start + Tskip;
     fdet(:,2) = handles.SNR;
     fdet(:,3) = handles.Smax;
     fdet(:,4) = handles.Fdet;
@@ -438,7 +439,22 @@ function SaveCpps_Callback(hObject, eventdata, handles)
     handles.CppOutput = handles.SpectraInput(1:file_lng);
     save(strcat(handles.SpectraPath,handles.SpectraInput(1:file_lng),'.poly',num2str(handles.Npol),'.txt'),'Cpr','-ASCII','-double');
     save(strcat(handles.SpectraPath,handles.SpectraInput(1:file_lng),'.X5cfs.txt'),'Cfs','-ASCII','-double');
-    save(strcat(handles.SpectraPath,'Fdets.vex20',handles.SpectraInput(2:3),'.',handles.SpectraInput(4:5),'.',handles.SpectraInput(6:7),'.',handles.SpectraInput(9:10),'.',handles.SpectraInput(19:22),'.r0i.txt'),'fdet','-ASCII','-double'); 
+    day = strcat('20',handles.SpectraInput(2:3),'.',handles.SpectraInput(4:5),'.',handles.SpectraInput(6:7));
+    Fdets_file = strcat(handles.SpectraPath,'Fdets.vex',day,'.',handles.SpectraInput(9:10),'.',handles.SpectraInput(19:22),'.r0i.txt');
+    fid = fopen(Fdets_file,'w+');
+    fprintf(fid,'* Observation conducted on %s at %s rev. 0\n',day,handles.SpectraInput(9:10));
+    if (handles.SpectraInput(1)=='v')
+        fprintf(fid,'* Base frequency: 8415.99 MHz \n');
+    elseif (handles.SpectraInput(1)=='r')
+        fprintf(fid,'* Base frequency: 8396.59 MHz \n');
+    end
+    fprintf(fid,'* Format : Time(UTC) [s]  | Signal-to-Noise ratio  |       Spectral max     |  Freq. detection [Hz]  |  Doppler noise [Hz] \n',handles.SpectraInput(10:19));
+    fprintf(fid,'* \n');
+    fclose(fid);
+    save(Fdets_file,'fdet','-ASCII','-double','-append'); 
+    
+
+    
     fprintf('saving the Cpp coefficients to %s \n',[handles.SpectraInput(1:file_lng),'.poly',num2str(handles.Npol),'.txt']);
     guidata(hObject,handles);
 end
@@ -581,14 +597,14 @@ function Npol2_box_CreateFcn(hObject, eventdata, handles)
  end
 end
 
-function skip_value_Callback(hObject, ~, handles)
-    handles.skip = str2double(get(handles.Npol2_box,'String'));
+function skip_box_Callback(hObject, ~, handles)
+    handles.skip = str2double(get(handles.skip_box,'String'));
     guidata(hObject,handles);
 end
 
 
 % --- Executes during object creation, after setting all properties.
-function skip_value_CreateFcn(hObject, ~, handles)
+function skip_box_CreateFcn(hObject, ~, handles)
  if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
  end

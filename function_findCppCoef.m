@@ -90,16 +90,16 @@ function [handles] = function_findCppCoef(handles)
  
  dxc    = dxc*df;
  FdetC  = Fdet + dxc;
-% Weight = (SNR./mSNR).^2;
-Weight(1:Nspec) = 0; 
-Weight(b0:b1)   = 1;
+ %Weight = (SNR./mSNR).^2;
+ Weight(1:Nspec) = 0; 
+ Weight(b0:b1)   = 1;
  
  % Calculate the n-order polynomial fit and the coefficients
  Ffit         = PolyfitW1(tsp,FdetC,Weight,Npol-1);
  Cf           = PolyfitW1C(tsp,FdetC,Weight,Npol-1);
  RMSF         = wstdev(FdetC-Ffit,Weight);
 
- fprintf(2,'Goodness of the polynomial fit           : %s\n',RMSF);
+ fprintf(2,'Goodness of the polynomial fit: %s\n',RMSF);
  
  %% We transform the values to readable for sctracker
  % Re-normallize the coefficients for a time scale in seconds.
