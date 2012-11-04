@@ -442,11 +442,15 @@ function SaveCpps_Callback(hObject, eventdata, handles)
     day = strcat('20',handles.SpectraInput(2:3),'.',handles.SpectraInput(4:5),'.',handles.SpectraInput(6:7));
     Fdets_file = strcat(handles.SpectraPath,'Fdets.vex',day,'.',handles.SpectraInput(9:10),'.',handles.SpectraInput(19:22),'.r0i.txt');
     fid = fopen(Fdets_file,'w+');
-    fprintf(fid,'* Observation conducted on %s at %s rev. 0\n',day,handles.SpectraInput(9:10));
+    fprintf(fid,'* Observation conducted on %s %s at %s rev. 0\n',day,Tcinfo{1,1},handles.SpectraInput(9:10));
     if (handles.SpectraInput(1)=='v')
         fprintf(fid,'* Base frequency: 8415.99 MHz \n');
     elseif (handles.SpectraInput(1)=='r')
         fprintf(fid,'* Base frequency: 8396.59 MHz \n');
+    elseif (handles.SpectraInput(1)=='m')
+        fprintf(fid,'* Base frequency: 8xxx.xx MHz \n');
+    elseif (handles.SpectraInput(1)=='g')
+        fprintf(fid,'* Base frequency: 2xxx.xx MHz \n');
     end
     fprintf(fid,'* Format : Time(UTC) [s]  | Signal-to-Noise ratio  |       Spectral max     |  Freq. detection [Hz]  |  Doppler noise [Hz] \n',handles.SpectraInput(10:19));
     fprintf(fid,'* \n');
