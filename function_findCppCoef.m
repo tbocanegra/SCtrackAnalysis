@@ -10,6 +10,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [handles] = function_findCppCoef(handles)
+
  format long g;
  fileName = strcat(handles.SpectraPath,handles.SpectraInput);
  Nspec    = handles.Nspec;
@@ -32,11 +33,13 @@ function [handles] = function_findCppCoef(handles)
  Sps      = zeros(Nspec,bfe-bfs);
  AverSpec(1:Nfft) = 0;
  
+ % Opening the spectra file
  fid  = fopen(fileName);
  if (fid > 0)
 	fprintf ('opening the file: %s \n',fileName);
  end
- %data is extracted from the spectra but we only use certain bins
+ 
+ % The each accumulated spectra is extracted from the file
  for jj=1:Nspec
 	data     = fread(fid,[Nfft 1],'float32');
     if (jj==1) 
@@ -46,16 +49,17 @@ function [handles] = function_findCppCoef(handles)
         handles.Spec(2,:) = data;
     end
     Sps(jj,:)= han(data(bfs:bfe-1));
-    AverSpec = data' + AverSpec;
+    AverSpec = transpose(data) + AverSpec;
     percent(jj,Nspec);
  end
- AverSpec = AverSpec/Nspec;
+ 
  fclose(fid);
  
- mSp = max(max(Sps));
- Sps = Sps./mSp;
-
- % we find the maximum values of the SC and calculate the SNR
+ AverSpec = AverSpec/Nspec;
+ mSp      = max(max(Sps));
+ Sps      = Sps./mSp;
+ 
+ % Find the max and min the spacecraft Doppler and calculate the SNR
  FsearchMinC = min(ffs); % Min freq
  FsearchMaxC = max(ffs); % Max freq
  Hwin  = 1e3;
@@ -70,10 +74,10 @@ function [handles] = function_findCppCoef(handles)
 	xfc(jj,:) = FindMax(Sps(jj,:),ffs,FsearchMinC,FsearchMaxC);
     Smax(jj)  = xfc(jj,3);
 	Fdet(jj)  = df*(xfc(jj,2)-1) + ffs(1); 
-	fdet(jj)  = xfc(jj,2);
 	RMS(jj,:) = GetRMS(Sps(jj,:),ffs,Fdet(jj),Hwin,Avoid);
 	SNR(jj)   = (xfc(jj,3)-RMS(jj,1))/RMS(jj,2);
  end
+ 
  mSNR = mean(SNR);
  
  fprintf('\n');
@@ -87,12 +91,11 @@ function [handles] = function_findCppCoef(handles)
  for jj=1:Nspec
 	dxc(jj) = PowCenter(Sps(jj,:),xfc(jj,2),3);
  end
- 
+  
  dxc    = dxc*df;
  FdetC  = Fdet + dxc;
- %Weight = (SNR./mSNR).^2;
- Weight(1:Nspec) = 0; 
- Weight(b0:b1)   = 1;
+ Weight = (SNR./mSNR).^2;
+ %Weight(1:Nspec) = 0;Weight(b0:b1)   = 1;
  
  % Calculate the n-order polynomial fit and the coefficients
  Ffit         = PolyfitW1(tsp,FdetC,Weight,Npol-1);
@@ -137,9 +140,8 @@ function [handles] = function_findCppCoef(handles)
  %   end
  %end
 
+ % Storing the temporal results to be read in the GUI interface 
  handles.AverSpec = AverSpec/mSNR;
- %handles.Fm    = Fm;
- %handles.ttm   = ttm;
  handles.mSNR  = mSNR;
  handles.rFit  = FdetC - Ffit;
  handles.ff    = ff;
