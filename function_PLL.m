@@ -26,7 +26,6 @@ function [handles] = function_PLL(handles)
   Tbinfo = textscan(fid,'%f %f %f %f %f');
  fclose(fid);
  StartF = Tbinfo{1,4}; % Frequency start
- %ToneNr=Tbinfo{1,1};StartBin=Tbinfo{1,2};StopBin=Tbinfo{1,3};StopF=Tbinfo{1,5};
 
  if (handles.TonesInput(1) == 'v')
      spacecraft = 'vex';
@@ -36,6 +35,8 @@ function [handles] = function_PLL(handles)
      spacecraft = 'gns';
  elseif (handles.TonesInput(1) == 'm')
      spacecraft = 'mex';
+ elseif (handles.TonesInput(1) == 'h')
+     spacecraft = 'her';
  end
  
  fid     = fopen(timebin,'r');
@@ -44,7 +45,6 @@ function [handles] = function_PLL(handles)
  fclose(fid);
  
  StarT   = Tcinfo{1,2};       % Start should read the starttiming file from the SWspec
- %Nscan   = str2double(handles.TonesInput(19:22));
  Sr      = 2*BW;        % Sampling rate
  Nt      = Tspan*Sr;    % Number of samples in the input file
  Ovlp    = 2;           % Overlap factor to calculate spectra
@@ -53,6 +53,7 @@ function [handles] = function_PLL(handles)
  dt      = 1/Sr;        % Time resolution
  df      = Sr/Nfft;     % Frequency resolution, (2*BW/NFFT) [0.2Hz]
  skip    = Tskip/df+1;  % Skip n scans at the beginning
+ Npol0   = 6;
  
  jt      = 0:1:Nt-1;
  tw      = dt*Nfft;
@@ -61,12 +62,12 @@ function [handles] = function_PLL(handles)
  
  fprintf('2- Read the the first polynomials coefficients\n');
  
- fid = fopen(strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.poly6.txt'));
+ fid = fopen(strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.poly',int2str(Npol0),'.txt'));
   Cell = textscan(fid,'%f');
   Cpr0 = Cell{1};
  fclose(fid);
  
- fid = fopen(strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.X5cfs.txt'));
+ fid = fopen(strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.X',int2str(Npol0-1),'cfs.txt'));
   Cell = textscan(fid,'%f');
   Cfs0 = Cell{1};
  fclose(fid);
@@ -176,28 +177,31 @@ fprintf('7- Store the coefficients of the second polynomials\n');
 
 fdets     = zeros(Nspec,5);
 fdets(:,1)= tts;                % fdets store spectra time
-fdets(:,2)= SNR;                %             SNR
+fdets(:,2)= SNR;                % SNR
 fdets(:,3)= Smax;               % Spectral MAX
-fdets(:,4)= Fvideo;             %  (FdetZ)    frequency detections
-fdets(:,5)= rFdet;              %             residual frequency
+fdets(:,4)= Fvideo;             % (FdetZ)    frequency detections
+fdets(:,5)= rFdet;              %            residual frequency
 day = strcat('20',handles.TonesInput(2:3),'.',handles.TonesInput(4:5),'.',handles.TonesInput(6:7));
 fdets_fn = strcat(handles.TonesPath,'Fdets.',spacecraft,day,'.',handles.TonesInput(9:10),'.',handles.TonesInput(19:22),'.r2i.txt');
 
 fid = fopen(fdets_fn,'w+');
-fprintf(fid,'* Observation conducted on %s at %s rev. 2\n',day,handles.TonesInput(9:10));
+fprintf(fid,'* Observation conducted on %s at %s rev. 2\n',day,handles.TonesInput(8:9));
 if (handles.TonesInput(1)=='v')
     fprintf(fid,'* Base frequency: 8415.99 MHz \n');
 elseif (handles.TonesInput(1)=='r')
     fprintf(fid,'* Base frequency: 8396.59 MHz \n');
 elseif (handles.TonesInput(1)=='g')
     fprintf(fid,'* Base frequency: TBD MHz \n');
+elseif (handles.TonesInput(1)=='h')
+    fprintf(fid,'* Base frequency: 8468.50 MHz \n');
 end
-fprintf(fid,'* Format : Time(UTC) [s]  | Signal-to-Noise ratio  |   Spectral max     |  Freq. detection [Hz]  |  Doppler noise [Hz] \n');
+fprintf(fid,'* Format : Time(UTC) [s]  | Signal-to-Noise ratio  |   Spectral max     |  Freq. detection [Hz]  |  Doppler noise [Hz]\n');
+fprintf(fid,'*\n');
 fclose(fid);
 
 save(fdets_fn,'fdets','-ASCII','-double','-append');
-save(strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.poly6.rev2.txt'),'Cpr1','-ASCII','-double');
-save(strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.X5cfs.rev2.txt'),'Cfs1','-ASCII','-double');
+save(strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.poly',int2str(Npol0),'.rev2.txt'),'Cpr1','-ASCII','-double');
+save(strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.X',int2str(Npol0-1),'cfs.rev2.txt'),'Cfs1','-ASCII','-double');
 
 fprintf('8- Integrate the phase and filter the signal using a decimation ratio of 1:100\n');
 FO      = floor(BW/BWo);
