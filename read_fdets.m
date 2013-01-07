@@ -19,7 +19,10 @@ function [handles] = read_fdets (handles)
  fprintf('- Opening %s\n',filename);
  
  fid  = fopen(filename,'r');
-  data = textscan(fid,'%f %f %f %f %f','HeaderLines',4);
+ if (fid < 0)
+    fprintf(1,'Error reading the Fdets file\n');
+ end
+ data = textscan(fid,'%f %f %f %f %f','HeaderLines',4);
  fclose(fid);
  
  datamat = cell2mat(data);
