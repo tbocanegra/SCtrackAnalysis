@@ -136,7 +136,6 @@ function scmenu_Callback(hObject, eventdata, handles)
   elseif isequal(Value, 2)
       hold off;
       df = handles.tfft/handles.tonebw;
-      df
       semilogy(handles.fs,handles.Spa,'bx');
       [x,y] = max(handles.Spa);
       axis auto;
@@ -429,6 +428,19 @@ function SaveCpps_Callback(hObject, eventdata, handles)
     top       = fgetl(fid);
     Tcinfo    = textscan(fid,'%f %f %f');
     fclose(fid);
+    
+    if (handles.SpectraInput(1) == 'v')
+        spacecraft = 'vex';
+    elseif (handles.SpectraInput(1) == 'r')
+        spacecraft = 'ras';
+    elseif (handles.SpectraInput(1) == 'g')
+        spacecraft = 'gns';
+    elseif (handles.SpectraInput(1) == 'm')
+        spacecraft = 'mex';
+    elseif (handles.SpectraInput(1) == 'h')
+        spacecraft = 'her';
+    end
+ 
     Start     = Tcinfo{1,2};
     fdet      = zeros(handles.Nspec,5);
     fdet(:,1) = handles.tsp + Start + Tskip;
@@ -436,13 +448,15 @@ function SaveCpps_Callback(hObject, eventdata, handles)
     fdet(:,3) = handles.Smax;
     fdet(:,4) = handles.Fdet;
     fdet(:,5) = handles.rFit;
+    
     handles.CppOutput = handles.SpectraInput(1:file_lng);
     save(strcat(handles.SpectraPath,handles.SpectraInput(1:file_lng),'.poly',num2str(handles.Npol),'.txt'),'Cpr','-ASCII','-double');
     save(strcat(handles.SpectraPath,handles.SpectraInput(1:file_lng),'.X5cfs.txt'),'Cfs','-ASCII','-double');
     day = strcat('20',handles.SpectraInput(2:3),'.',handles.SpectraInput(4:5),'.',handles.SpectraInput(6:7));
-    Fdets_file = strcat(handles.SpectraPath,'Fdets.vex',day,'.',handles.SpectraInput(9:10),'.',handles.SpectraInput(19:22),'.r0i.txt');
+    Fdets_file = strcat(handles.SpectraPath,'Fdets.',spacecraft,day,'.',handles.SpectraInput(9:10),'.',handles.SpectraInput(19:22),'.r0i.txt');
     fid = fopen(Fdets_file,'w+');
     fprintf(fid,'* Observation conducted on %s %s at %s rev. 0\n',day,Tcinfo{1,1},handles.SpectraInput(9:10));
+    
     if (handles.SpectraInput(1)=='v')
         fprintf(fid,'* Base frequency: 8415.99 MHz \n');
     elseif (handles.SpectraInput(1)=='r')
@@ -451,13 +465,14 @@ function SaveCpps_Callback(hObject, eventdata, handles)
         fprintf(fid,'* Base frequency: 8xxx.xx MHz \n');
     elseif (handles.SpectraInput(1)=='g')
         fprintf(fid,'* Base frequency: 2xxx.xx MHz \n');
+    elseif (handles.SpectraInput(1) == 'h')
+        fprintf(fid,'* Base frequency: 8468.50 MHz \n');
     end
+    
     fprintf(fid,'* Format : Time(UTC) [s]  | Signal-to-Noise ratio  |       Spectral max     |  Freq. detection [Hz]  |  Doppler noise [Hz] \n',handles.SpectraInput(10:19));
     fprintf(fid,'* \n');
     fclose(fid);
     save(Fdets_file,'fdet','-ASCII','-double','-append'); 
-    
-
     
     fprintf('saving the Cpp coefficients to %s \n',[handles.SpectraInput(1:file_lng),'.poly',num2str(handles.Npol),'.txt']);
     guidata(hObject,handles);
