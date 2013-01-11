@@ -15,7 +15,7 @@
 
 function [handles] = read_fdets (handles)
  filename = strcat(handles.fdets_path,handles.fdets_file);
- fprintf('\n READ_PHASE.m (reading the phase text file)\n');
+ fprintf('\n READ_FDETS.m (reading the Fdets text file)\n');
  fprintf('- Opening %s\n',filename);
  
  fid  = fopen(filename,'r');

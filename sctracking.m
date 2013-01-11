@@ -146,7 +146,7 @@ function scmenu_Callback(hObject, eventdata, handles)
   elseif isequal(Value,3)
       hold off;
       % set(gca,'Position',[0.13 0.18 0.8 0.72],'Units','normalized','fontsize',10,'fontname','Times New Roman'); 
-      plot(handles.tspec,handles.ToneSNR,'-bo','LineWidth',1,'MarkerSize',6); 
+      plot(handles.tspec,handles.ToneSNR,'-b','LineWidth',1,'MarkerSize',6); 
       grid on; xlim([0 max(handles.tspec)]);%ylim([0 10000]);
       t=handles.ToneSNR;
  %     save('SNRPu.txt','t','-ASCII','-double');
@@ -156,7 +156,7 @@ function scmenu_Callback(hObject, eventdata, handles)
   elseif isequal(Value, 4)
       hold off;
       %set(gca,'Position',[0.14 0.18 0.85 0.72],'Units','normalized','fontsize',10,'fontname','Times New Roman'); 
-      plot(handles.tspec,handles.Fdet,'-ro');hold on;plot(handles.tspec,handles.Ffit,'b','LineWidth',1);
+      plot(handles.tspec,handles.Fdet,'-r.');hold on;plot(handles.tspec,handles.Ffit,'b','LineWidth',1);
       grid on;xlim([0 max(handles.tspec)]);legend('Fdet','Pfit');
       title('Frequency detections at 0.4 Hz resolution','fontsize',11,'fontname','Times New Roman');
       xlabel('Scan Time [s]','fontsize',11,'fontname','Times New Roman');
@@ -164,7 +164,7 @@ function scmenu_Callback(hObject, eventdata, handles)
   elseif isequal(Value,5)
       hold off;
       %set(gca,'Position',[0.13 0.18 0.85 0.72],'Units','normalized','fontsize',10,'fontname','Times New Roman'); 
-      plot(handles.tspec,handles.rFdet,'-ro');
+      plot(handles.tspec,handles.rFdet,'k.');
       grid on;xlim([0 max(handles.tspec)]);
       title('Residual frequency at 0.4 Hz resolution','fontsize',11,'fontname','Times New Roman');
       xlabel('Scan Time [s]','fontsize',11,'fontname','Times New Roman');
@@ -451,7 +451,7 @@ function SaveCpps_Callback(hObject, eventdata, handles)
     
     handles.CppOutput = handles.SpectraInput(1:file_lng);
     save(strcat(handles.SpectraPath,handles.SpectraInput(1:file_lng),'.poly',num2str(handles.Npol),'.txt'),'Cpr','-ASCII','-double');
-    save(strcat(handles.SpectraPath,handles.SpectraInput(1:file_lng),'.X5cfs.txt'),'Cfs','-ASCII','-double');
+    save(strcat(handles.SpectraPath,handles.SpectraInput(1:file_lng),'.X',num2str(handles.Npol-1),'cfs.txt'),'Cfs','-ASCII','-double');
     day = strcat('20',handles.SpectraInput(2:3),'.',handles.SpectraInput(4:5),'.',handles.SpectraInput(6:7));
     Fdets_file = strcat(handles.SpectraPath,'Fdets.',spacecraft,day,'.',handles.SpectraInput(9:10),'.',handles.SpectraInput(19:22),'.r0i.txt');
     fid = fopen(Fdets_file,'w+');
@@ -627,4 +627,18 @@ function skip_box_CreateFcn(hObject, ~, handles)
  if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
  end
+end
+
+
+
+function Npol1_box_Callback(hObject, eventdata, handles)
+    handles.Npol1 = str2double(get(handles.Npol1_box,'String'));
+    guidata(hObject,handles);
+end
+
+% --- Executes during object creation, after setting all properties.
+function Npol1_box_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 end
