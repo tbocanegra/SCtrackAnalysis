@@ -18,6 +18,7 @@ function [handles] = function_PLL(handles)
  BW        = handles.tonebw;        % Tone BW input
  BWn       = handles.tonebw_out;    % Tone BW output
  BWo       = handles.tonebw_if;     % Intermediate filtering
+ Npol0     = handles.Npol1;         % Order of the 1st Polynomials
  Npf       = handles.Npol2;         % Order of the 2nd Polynomials
  Tskip     = handles.skip;          % Skip seconds added in the SCtracker
  
@@ -53,7 +54,6 @@ function [handles] = function_PLL(handles)
  dt      = 1/Sr;        % Time resolution
  df      = Sr/Nfft;     % Frequency resolution, (2*BW/NFFT) [0.2Hz]
  skip    = Tskip/df+1;  % Skip n scans at the beginning
- Npol0   = 6;
  
  jt      = 0:1:Nt-1;
  tw      = dt*Nfft;
@@ -62,14 +62,26 @@ function [handles] = function_PLL(handles)
  
  fprintf('2- Read the the first polynomials coefficients\n');
  
- fid = fopen(strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.poly',int2str(Npol0),'.txt'));
-  Cell = textscan(fid,'%f');
-  Cpr0 = Cell{1};
- fclose(fid);
+% fn  = strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.poly',int2str(Npol0),'.txt');
+ fn  = strcat(handles.TonesPath,handles.TonesInput(1:23),'0320000pt_1s_ch1.poly',int2str(Npol0),'.txt');
+ fid = fopen(fn);
+ if (fid < 0)
+     fprintf('Failed opening: %s',fn);
+ end
  
- fid = fopen(strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.X',int2str(Npol0-1),'cfs.txt'));
-  Cell = textscan(fid,'%f');
-  Cfs0 = Cell{1};
+ Cell = textscan(fid,'%f');
+ Cpr0 = Cell{1};
+ fclose(fid);
+
+ %fn  = strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.X',int2str(Npol0-1),'cfs.txt'); 
+ fn  = strcat(handles.TonesPath,handles.TonesInput(1:23),'0320000pt_1s_ch1.X',int2str(Npol0-1),'cfs.txt');
+ fid = fopen(fn);
+ if (fid < 0)
+     printf('Failed opening: %s',fn);
+ end
+ 
+ Cell = textscan(fid,'%f');
+ Cfs0 = Cell{1};
  fclose(fid);
 
  Nspav = Nav*Ovlp-(Ovlp-1);     % Number of spectra to average
@@ -137,11 +149,18 @@ function [handles] = function_PLL(handles)
  fprintf('5- Create the second phase polynomials model\n');
  Weight    = SNR.^2;
  Npp       = Npf + 1;
- Ffit      = PolyfitW1(tspec,Fdet,Weight,Npf);
- rFdet     = Fdet' - Ffit;
+ 
+ % Small correction added for VEXaDE experiments
+ mFdet     = mean(FdetZ);
+ FdetZ     = FdetZ - mFdet;
+ 
+ Ffit      = PolyfitW1(tspec,FdetZ,Weight,Npf);
+ rFdet     = FdetZ' - Ffit;
  fprintf('    Std deviation: %f\n    SNR mean     : %f\n',std(rFdet),mean(SNR));
- FitCoeffs = PolyfitW1C(tspec,Fdet,Weight,Npf);
-
+ 
+ FitCoeffs    = PolyfitW1C(tspec,FdetZ,Weight,Npf);
+ FitCoeffs(1) = FitCoeffs(1) + mFdet;
+ 
  fprintf('6- Store the frequency detections, residuals and SNR\n');
  ToneSNR   = SNR;                   % Store the SNR values to plot the results later
  tts       = tspec + StarT + Tskip; % Time of the spectra + Beg of scan
@@ -171,7 +190,7 @@ for jspec=1:Nspec
 end
 
 % Fvideo includes the 1st polynomials the FdetZ only the second approach
-Fvideo = StartF(1) + Ffirst + Fdet';
+Fvideo = StartF(1) + Ffirst + FdetZ' + mFdet;
 
 fprintf('7- Store the coefficients of the second polynomials\n');
 
@@ -179,8 +198,9 @@ fdets     = zeros(Nspec,5);
 fdets(:,1)= tts;                % fdets store spectra time
 fdets(:,2)= SNR;                % SNR
 fdets(:,3)= Smax;               % Spectral MAX
-fdets(:,4)= Fvideo;             % (FdetZ)    frequency detections
-fdets(:,5)= rFdet;              %            residual frequency
+fdets(:,4)= Fvideo;             % Frequency detections
+fdets(:,5)= rFdet;              % Residual frequency
+
 day = strcat('20',handles.TonesInput(2:3),'.',handles.TonesInput(4:5),'.',handles.TonesInput(6:7));
 fdets_fn = strcat(handles.TonesPath,'Fdets.',spacecraft,day,'.',handles.TonesInput(9:10),'.',handles.TonesInput(19:22),'.r2i.txt');
 
@@ -200,8 +220,8 @@ fprintf(fid,'*\n');
 fclose(fid);
 
 save(fdets_fn,'fdets','-ASCII','-double','-append');
-save(strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.poly',int2str(Npol0),'.rev2.txt'),'Cpr1','-ASCII','-double');
-save(strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.X',int2str(Npol0-1),'cfs.rev2.txt'),'Cfs1','-ASCII','-double');
+save(strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.poly',int2str(Npf),'.rev2.txt'),'Cpr1','-ASCII','-double');
+save(strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.X',int2str(Npf-1),'cfs.rev2.txt'),'Cfs1','-ASCII','-double');
 
 fprintf('8- Integrate the phase and filter the signal using a decimation ratio of 1:100\n');
 FO      = floor(BW/BWo);
@@ -284,7 +304,8 @@ Fmax    = 0.75*BWo;
 xf      = FindMax(ssfp,fto,Fmin,Fmax);
 fmax    = (xf(2)-1)*dfto;
 
-spnoise = ssfp(Bsc-500:Bsc-100);
+spnoise = ssfp(Bsc-400:Bsc-100);
+%spnoise = ssfp(Bsc-400:Bsc-100); Changed when analysing the VEXaDE 
 SNR     = std(spnoise)^-1;
 dBSNR   = 10*log10(SNR);
 
@@ -469,7 +490,7 @@ handles.Fvideo = Fvideo;
 handles.ToneSNR= ToneSNR;
 handles.fs     = fs;
 handles.fsx    = fsx;
-handles.Fdet   = Fdet;
+handles.Fdet   = FdetZ;
 handles.Ffit   = Ffit;
 handles.rFdet  = rFdet;
 handles.tspec  = tspec;
