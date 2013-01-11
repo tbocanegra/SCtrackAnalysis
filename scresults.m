@@ -123,8 +123,8 @@ function pm_graph_Callback(hObject, eventdata, handles)
         fprintf('Frequency residuals: %s \n',sqrt(mean(handles.rfdets.^2)));
         fprintf('SNR: %s \n',mean(handles.SNR));
         deltaF  = strcat('Freq range:',mat2str((max(handles.fdets)-min(handles.fdets)),1), ' Hz');
-        rdF     = strcat('RMS: ',mat2str((std(handles.rfdets)*1000),1),'mHz in 5s');
-        snr     = strcat('mean: ',mat2str(mean(handles.SNR),1),' in 5s');
+        rdF     = strcat('RMS: ',mat2str((std(handles.rfdets)*1000),1),'mHz in 1s');
+        snr     = strcat('mean: ',mat2str(mean(handles.SNR),1),' in 1s');
         uicontrol('Parent', f1, 'Style','text','units','normalized','Position',[0.65 0.85 0.25 0.03],'BackgroundColor','w','fontname','Arial','FontSize',11,'String',deltaF);
         uicontrol('Parent', f1, 'Style','text','units','normalized','Position',[0.65 0.55 0.25 0.03],'BackgroundColor','w','fontname','Arial','FontSize',11,'String',rdF);
         uicontrol('Parent', f1, 'Style','text','units','normalized','Position',[0.65 0.25 0.25 0.03],'BackgroundColor','w','fontname','Arial','FontSize',11,'String',snr);
