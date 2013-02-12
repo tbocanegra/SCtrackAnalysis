@@ -151,6 +151,7 @@ function pb_merge_fdets_Callback(hObject, eventdata, handles)
     nfiles = str2double(get(handles.nfiles,'String'));
     kk     = 0;
     tlines = 0;
+    first  = 100;
     for ii=1:nfiles
         if (ii < 10)
             FdetsFile = strcat(handles.fdets_file(1:22),'.000',int2str(ii),handles.fdets_file(28:35));
@@ -163,9 +164,22 @@ function pb_merge_fdets_Callback(hObject, eventdata, handles)
         FdetsName = strcat(handles.fdets_path,FdetsFile);
         if ( exist(FdetsName,'file') > 0 )
             fid    = fopen(FdetsFile,'r');
-            txt_file = textscan(fid,'%f %f %f %f %f','Headerlines',4);
+            first_line = textscan(fid,'%s %s %s %s %s %s %s %s %s',1);
+            secon_line = textscan(fid,'%s %s %s %s %s',1);
+            if (ii < first)
+                first = ii;
+                orig_line = first_line{5};
+            end
+            txt_file = textscan(fid,'%f %f %f %f %f','Headerlines',3);
             mat_file = cell2mat(txt_file);
             Fdets(tlines+1:tlines+length(mat_file),1:5) = mat_file;
+            
+            if strcmp(orig_line,first_line{5})
+                % The world continue to spin
+            else
+                % the day has changed so we add 20*60*60
+                Fdets(tlines+1:tlines+length(mat_file,1)) = Fdets(tlines+1:tlines+length(mat_file,1)) + 24*60*60;
+            end
             tlines = length(mat_file) + tlines;
             clear txt_file;
             fclose(fid);
@@ -179,10 +193,10 @@ function pb_merge_fdets_Callback(hObject, eventdata, handles)
     FdetsFile = strcat(handles.fdets_path,handles.fdets_file(1:22),handles.fdets_file(28:35));
     
     fid = fopen(FdetsFile,'w+');
-    fprintf(fid,'* Observation conducted on %s at %s rev. %s\n',handles.fdets_file(10:19),handles.fdets_file(21:22),handles.fdets_file(30));
-    fprintf(fid,'* Base frequency: 8415.99 MHz \n');
-    fprintf(fid,'* Format : Time(UTC) [s]  | Signal-to-Noise ratio  |       Spectral max     |  Freq. detection [Hz]  |  Doppler noise [Hz] \n',handles.fdets_file(10:19));
-    fprintf(fid,'* \n');
+    fprintf(fid,'%s %s %s %s %s %s %s %s %s\n',char(first_line{1}),char(first_line{2}),char(first_line{3}),char(first_line{4}),char(first_line{5}),char(first_line{6}),char(first_line{7}),char(first_line{8}),char(first_line{9}));   
+    fprintf(fid,'%s %s %s %s %s\n',char(secon_line{1}),char(secon_line{2}),char(secon_line{3}),char(secon_line{4}),char(secon_line{5}));
+    fprintf(fid,'// Format : Time(UTC) [s]  | Signal-to-Noise ratio  |       Spectral max     |  Freq. detection [Hz]  |  Doppler noise [Hz] \n');
+    fprintf(fid,'// \n');
     fclose(fid);
     
     save(FdetsFile,'Fdets','-ASCII','-double','-append');
