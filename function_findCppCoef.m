@@ -1,4 +1,4 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %       MATLAB tools for the post-processing     %
 %       of the spacecraft main carrier line      %
 %                                                %
@@ -21,6 +21,7 @@ function [handles] = function_findCppCoef(handles)
  t0       = 0;               % t1 not used (2012.08.20)
  b0       = t0/handles.dts+1;
  b1       = handles.Nspec;
+ Npf      = Npol-1;
  SR       = 2*BW;
  df       = SR/fftpoints;
  bfs      = handles.Fsmin/df+1;
@@ -87,21 +88,29 @@ function [handles] = function_findCppCoef(handles)
  fprintf(2,'Average of the SNRC through the spectras : %s\n',mSNR);
 
  %% Calculating the centre of the gravity correction
+ Weight(1:Nspec) = 1;
+ %Weight = (SNR./mSNR).^2;
  dxc(1:Nspec)=0;
+ 
  for jj=1:Nspec
 	dxc(jj) = PowCenter(Sps(jj,:),xfc(jj,2),3);
  end
   
  dxc    = dxc*df;
  FdetC  = Fdet + dxc;
- Weight = (SNR./mSNR).^2;
- %Weight(1:Nspec) = 0;Weight(b0:b1)   = 1;
+ 
+ mFdet     = mean(FdetC);            % VEXADE
+ FdetC     = FdetC - mFdet;          % VEXADE
  
  % Calculate the n-order polynomial fit and the coefficients
- Ffit         = PolyfitW1(tsp,FdetC,Weight,Npol-1);
- Cf           = PolyfitW1C(tsp,FdetC,Weight,Npol-1);
+ Ffit         = PolyfitW1(tsp,FdetC,Weight,Npf);
+ Cf           = PolyfitW1C(tsp,FdetC,Weight,Npf);
  RMSF         = wstdev(FdetC-Ffit,Weight);
-
+ 
+ Cf(1)        = Cf(1) + mFdet;       % VEXADE
+ Ffit         = Ffit  + mFdet;       % VEXADE
+ FdetC        = FdetC + mFdet;       % VEXADE
+ 
  fprintf(2,'Goodness of the polynomial fit: %s\n',RMSF);
  
  %% We transform the values to readable for sctracker
@@ -110,9 +119,9 @@ function [handles] = function_findCppCoef(handles)
  % Cfs = Poly coefficients in Hz per second
  % Cps = Poly coefficients in radians per second
  % Cpr = Poly coefficients in radians per sample
- Cfs(1:Npol)=0;
- Cps(1:Npol+1)=0;
- Cpr(1:Npol+1)=0;
+ Cfs(1,1:Npol)=0;
+ Cps(1,1:Npol+1)=0;
+ Cpr(1,1:Npol+1)=0;
 
  dtsampling = 1/SR;
  Tspan      = max(tsp);
@@ -151,8 +160,8 @@ function [handles] = function_findCppCoef(handles)
  handles.SNR   = SNR;
  handles.Smax  = Smax;
  handles.tsp   = tsp;
- handles.Cpr0  = Cpr';
- handles.Cf0   = Cf';
- handles.Cfs0  = Cfs';
+ handles.Cpr0  = Cpr;
+ handles.Cf0   = Cf;
+ handles.Cfs0  = Cfs;
  fprintf('\nPolynomial fit created correctly\n\n');
 end
