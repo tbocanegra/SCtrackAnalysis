@@ -33,6 +33,7 @@ function [handles] = function_findCppCoef(handles)
  ffs      = ff(bfs:bfe-1);
  Sps      = zeros(Nspec,bfe-bfs);
  AverSpec(1:Nfft) = 0;
+ Vexade   = 0;
  
  % Opening the spectra file
  fid  = fopen(fileName);
@@ -99,17 +100,21 @@ function [handles] = function_findCppCoef(handles)
  dxc    = dxc*df;
  FdetC  = Fdet + dxc;
  
- mFdet     = mean(FdetC);            % VEXADE
- FdetC     = FdetC - mFdet;          % VEXADE
+ if ( Vexade == 1)
+    mFdet     = mean(FdetC);            % VEXADE
+    FdetC     = FdetC - mFdet;          % VEXADE
+ end
  
  % Calculate the n-order polynomial fit and the coefficients
  Ffit         = PolyfitW1(tsp,FdetC,Weight,Npf);
  Cf           = PolyfitW1C(tsp,FdetC,Weight,Npf);
  RMSF         = wstdev(FdetC-Ffit,Weight);
  
- Cf(1)        = Cf(1) + mFdet;       % VEXADE
- Ffit         = Ffit  + mFdet;       % VEXADE
- FdetC        = FdetC + mFdet;       % VEXADE
+ if ( Vexade == 1)
+    Cf(1)        = Cf(1) + mFdet;       % VEXADE
+    Ffit         = Ffit  + mFdet;       % VEXADE
+    FdetC        = FdetC + mFdet;       % VEXADE
+ end
  
  fprintf(2,'Goodness of the polynomial fit: %s\n',RMSF);
  
