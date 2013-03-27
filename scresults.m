@@ -178,7 +178,7 @@ function pb_merge_fdets_Callback(hObject, eventdata, handles)
                 % The world continue to spin
             else
                 % the day has changed so we add 20*60*60
-                Fdets(tlines+1:tlines+length(mat_file,1)) = Fdets(tlines+1:tlines+length(mat_file,1)) + 24*60*60;
+                Fdets(tlines+1:tlines+length(mat_file),1) = Fdets(tlines+1:tlines+length(mat_file),1) + 24*60*60;
             end
             tlines = length(mat_file) + tlines;
             clear txt_file;

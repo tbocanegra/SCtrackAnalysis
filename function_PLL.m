@@ -60,7 +60,7 @@ function [handles] = function_PLL(handles)
  Padd    = 2;           % Padding value  
  dt      = 1/Sr;        % Time resolution
  df      = Sr/Nfft;     % Frequency resolution, (2*BW/NFFT) [0.2Hz]
- skip    = Tskip/df+1;  % Skip n scans at the beginning
+ skip    = floor(Tskip/df)+1;  % Skip n scans at the beginning
  jt      = 0:1:Nt-1;
  tw      = dt*Nfft;
  tt      = jt.*dt;
@@ -143,7 +143,8 @@ function [handles] = function_PLL(handles)
  end
  
  fprintf('5- Create the second phase polynomials model\n');
- Weight(1:Nspec) = 1;               % Changed to 1 from SNR^2
+ Weight(1:Nspec) = 0;
+ Weight(1:Nspec) = 1;% Changed to 1 from SNR^2
  mFdet           = mean(Fdet);
  
  % Small correction added for VEXaDE experiments 
@@ -180,8 +181,8 @@ if (Npp1<Npp2)
 end
 
 for jspec=1:Nspec
-    for jj=2:Npp2
-        Ffirst(jspec) = Ffirst(jspec) + Cfs2(jj)*tspec(jspec)^(jj-1);
+    for jj=2:Npp1
+        Ffirst(jspec) = Ffirst(jspec) + Cfs1(jj)*tspec(jspec)^(jj-1);
     end
 end
 
@@ -243,10 +244,13 @@ Oshifti = Nfft/Ovlp;
 Wini    = cos(pi/Nfft.*(jps-0.5*Nfft+0.5));
 Wino    = cos(pi/Nffto.*(jpso-0.5*Nffto+0.5));
 
-Cf1(1:Npp1,1) = 0;
+Cf1(1:Npp2,1) = 0;
 
 for jj=1:Npp1
     Cf1(jj) = Cpp1(jj+1)*jj/(2*pi);
+end
+
+for jj=1:Npp2
     Cf2(jj) = Cpp2(jj+1)*jj/(2*pi);
 end
 
