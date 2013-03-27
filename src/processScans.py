@@ -1,14 +1,18 @@
 # declare required packages
-import os, subprocess
-#import CalculateCpp
+import os, subprocess, sys
 from multiprocessing import Process
 
 # declare variables
 
+def ask_program(prompt):
+        while True:
+                program = raw_input(prompt)
+ 		return program
+
 def ask_station(prompt):
 	while True:
 		station = raw_input(prompt)
-		if station in ('Mh','Wz','On','Hh','Ys'):
+		if station in ('Hh','Ht','Hb','Mc','Mh','Wz','On','Ys','Yg'):
 			return station
 		else:
 			retries = retries -1
@@ -30,7 +34,7 @@ def ask_format(prompt, retries=2, complaint='Format not supported'):
 def ask_scans(prompt, retries=2, complaint='Only numbers!'):
 	while True:
 		scans = input(prompt)
-		if scans < 25:
+		if scans < 60:
 			return scans
 		else:
 			retries = retries - 1
@@ -71,38 +75,63 @@ def ask_first_scan(prompt, retries=2, complaint='Insert a correct number'):
         print(complaint)
 
 def run_scans(flag):
-	cn = fn.replace('001','00'+str(start+i-1))
-	print('Core ' + str(i) + ': Running swspectrometer inifile'+str(start+i-1)+'.ini ' + cn)
-	s = open('inifile.ini').read()
-	s = s.replace('001','00'+str(start+i-1))
-	s = s.replace('_ST_','_'+station+'_');
-	f = open('inifile'+ str(start+i-1) +'.ini','w')
+    if (program == '1'):
+        print('Using SWspec\n')
+        s = open('inifile.'+station).read()
+	if ((i-1) < 9):
+	   cn = fn.replace('0001','000'+str(start+i-1))
+	   s = s.replace('0001','000'+str(start+i-1))
+	else:
+	   cn = fn.replace('0001','00'+str(start+i-1))
+	   s = s.replace('0001','00'+str(start+i-1))
+	f = open('inifile.' + station + str(start+i-1),'w')
 	f.write(s)
 	f.close()
-	a = subprocess.Popen(['/bin/cat','inifile'+str(start+i-1)+'.ini'])#,filename)
-	a.wait()
-#	a = subprocess.Popen(['swspectrometer','inifile'+str(start+i)+'.ini',cn])
-#	print('SWspec has finished correctly. Calculating the Cpp coefficients...\n')
-#	a = CalculateCpp(fn[1:7]+'_'+ station + '_' + format + '_3200000pt_5s_ch1.swspec.bin',3.4e6,3.45e6)
-#	a.wait()
-#   s = open('inifile').read()
-#   s = s.replace('001','00'+str(i))
-#   s = s.replace('_ST_','_'+station+'_');
-#   f = open('inifile'+str(i),'w')
-#   f.write(s)
-#   f.close()
-#   a = subprocess.Popen(['./sctracker','inifile'+str(i)])
+        a = subprocess.Popen(['/bin/cat','inifile.' + station + str(start+i-1)])
+
+        print('Core ' + str(i) + ': Running swspectrometer inifile.' + station + str(start+i-1) + cn)         
+        a = subprocess.Popen(['swspectrometer','inifile.'+ station + str(start+i-1),cn])
+        a.wait()
+        print('SWspec has finished correctly \n')
+    if (program == '2'):
+        print('Calculating the polynomials\n')
+        cn = fn.replace('0001','000'+str(start+1-1))
+        a = subprocess.Popen(['python','~/src/CalculateCppy.py',cn])
+    else:
+         print('Using SCtracker\n')
+#         cn = fn.replace('001',str(start+1-1))
+         s = open('inifile'+station).read()
+         if ((i-1) < 9):
+            s = s.replace('0001','000'+str(start+i-1))
+         else:
+            s = s.replace('0001','00'+str(start+i-1))
+         f = open('inifile' + station + str(start+i-1),'w')
+         f.write(s)
+         f.close()
+         a = subprocess.Popen(['/bin/cat','inifile' + station + str(start+i-1)])
+
+         print('Core ' + str(i) + ': Running sctraker inifile' + station + str(start+i-1))
+         a = subprocess.Popen(['sctracker','inifile'+station+str(start+i-1)])
+         a.wait()
+         print('SCtracker has completed the task \n');
 
 print('Configuring the input parameters\n')
-fn = filename('Which is the basename of the file to process? ')
-station = ask_station('Which station are you processing? ')
-cores = ask_cores('How many of scans run in parallel? ')
-scans = ask_scans('How many scans do you want to process? ')
-start = ask_first_scan('Which is the first scan? ')
-#format = ask_format('Which data format was used? ')
-print('\n')
 
-for i in range (1,cores+1):
+for arg in sys.argv:
+ fn = arg
+
+program = ask_program('Select: 1- SWspec 2-Calculate polynomials 3- SCtracker')
+print(program)
+if (program == 2):
+   print('Nothing to ask')
+else:
+   station = ask_station('Which station are you processing? ')
+   cores = ask_cores('How many of scans run in parallel? ')
+   scans = ask_scans('How many scans do you want to process? ')
+   start = ask_first_scan('Which is the first scan? ')
+   print('\n')
+
+for i in range (1,scans-start+1):
 	p = Process(target=run_scans, args=('test',))
 	p.start()
 	p.join()
