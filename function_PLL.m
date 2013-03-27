@@ -53,14 +53,14 @@ function [handles] = function_PLL(handles)
  end
  
  %Nscan   = str2double(handles.TonesInput(19:22));
- Sr      = 2*BW;        % Sampling rate
- Nt      = Tspan*Sr;    % Number of samples in the input file
- Ovlp    = 2;           % Overlap factor to calculate spectra
- Nav     = 2;           % Number of spectra to average
- Padd    = 2;           % Padding value  
- dt      = 1/Sr;        % Time resolution
- df      = Sr/Nfft;     % Frequency resolution, (2*BW/NFFT) [0.2Hz]
- skip    = floor(Tskip/df)+1;  % Skip n scans at the beginning
+ Sr      = 2*BW;            % Sampling rate
+ Nt      = Tspan*Sr;        % Number of samples in the input file
+ Ovlp    = 2;               % Overlap factor to calculate spectra
+ Nav     = 2;               % Number of spectra to average
+ Padd    = 2;               % Padding value  
+ dt      = 1/Sr;            % Time resolution
+ df      = Sr/Nfft;         % Frequency resolution, (2*BW/NFFT) [0.2Hz]
+ skip    = floor(Tskip*df); % Skip n scans at the beginning
  jt      = 0:1:Nt-1;
  tw      = dt*Nfft;
  tt      = jt.*dt;
@@ -71,28 +71,29 @@ function [handles] = function_PLL(handles)
  fn  = strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.poly',int2str(Npp1),'.txt');
  %fn  = strcat(handles.TonesPath,handles.TonesInput(1:23),'0320000pt_1s_ch1.poly',int2str(Npp1),'.txt');
  fid = fopen(fn);
-  if (fid < 0)
-     fprintf('Failed opening: %s',fn);
-  end
-  Cell = textscan(fid,'%f');
-  Cpp1 = Cell{1};
+ if (fid < 0)
+    fprintf('Failed opening: %s',fn);
+ end
+ Cell = textscan(fid,'%f');
+ Cpp1 = Cell{1};
  fclose(fid);
 
  fn  = strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.X',int2str(Npp1-1),'cfs.txt'); 
  %fn  = strcat(handles.TonesPath,handles.TonesInput(1:23),'0320000pt_1s_ch1.X',int2str(Npp1-1),'cfs.txt');
  fid = fopen(fn);
-  if (fid < 0)
-      printf('Failed opening: %s',fn);
-  end 
-  Cell = textscan(fid,'%f');
-  Cfs1 = Cell{1};
+ if (fid < 0)
+    printf('Failed opening: %s',fn);
+ end 
+ Cell = textscan(fid,'%f');
+ Cfs1 = Cell{1};
  fclose(fid);
 
- Nspav = Nav*Ovlp-(Ovlp-1);     % Number of spectra to average
- Nspec = floor(Nt/(Nfft*Nav));  % Number of spectra processed
- jspec = 0:1:Nspec-1;
+ Nspav = Nav*Ovlp-(Ovlp-1);             % Number of spectra to average
+ Nspec = floor(Nt/(Nfft*Nav));     % Number of spectra processed
+ Nspek = Nspec - skip;                  % Number of spectra - skip
+ jspek = 0:1:Nspek-1;
  Bav   = Nfft*Nav;
- tspec = (jspec+0.5)*Bav*dt;
+ tspek = (jspek+0.5)*Bav*dt;
  Npadd = Nfft*(Padd-1);
  dpadd(1:Npadd) = 0;
 
@@ -121,30 +122,30 @@ function [handles] = function_PLL(handles)
  HalfWindow    = 40;
  LineAvoidance = 10;
  
- xf            = zeros(Nspec,3);
- rmsd          = zeros(Nspec,3);
+ xf            = zeros(Nspek,3);
+ rmsd          = zeros(Nspek,3);
 
- dxc(1:Nspec)  = 0;
- SNR(1:Nspec)  = 0;
- Smax(1:Nspec) = 0;
+ dxc(1:Nspek)  = 0;
+ SNR(1:Nspek)  = 0;
+ Smax(1:Nspek) = 0;
  
- for jj=skip:Nspec
-    xf(jj,:)   = FindMax(Sp(jj,:),fs,FsearchMin,FsearchMax);
+ for jj=1:Nspek
+    xf(jj,:)   = FindMax(Sp(jj+skip,:),fs,FsearchMin,FsearchMax);
     Smax(jj)   = xf(jj,3);
-    dxc(jj)    = PowCenter(Sp(jj,:),xf(jj,2),3);
+    dxc(jj)    = PowCenter(Sp(jj+skip,:),xf(jj,2),3);
  end
-
+ 
  dxc           = dxc.*dfs;
  Fdet          = dfs.*(xf(:,2)-1) + dxc';
   
- for jj=skip:Nspec
-   rmsd(jj,:)  = GetRMS(Sp(jj,:),fs,Fdet(jj),HalfWindow,LineAvoidance);
+ for jj=1:Nspek
+   rmsd(jj,:)  = GetRMS(Sp(jj+skip,:),fs,Fdet(jj),HalfWindow,LineAvoidance);
    SNR(jj)     = (xf(jj,3) - rmsd(jj,1))/rmsd(jj,2);
  end
  
  fprintf('5- Create the second phase polynomials model\n');
- Weight(1:Nspec) = 0;
- Weight(1:Nspec) = 1;% Changed to 1 from SNR^2
+ Weight(1:Nspek) = 0;
+ Weight(1:Nspek) = 1;           % Changed to 1 from SNR^2
  mFdet           = mean(Fdet);
  
  % Small correction added for VEXaDE experiments 
@@ -152,9 +153,9 @@ function [handles] = function_PLL(handles)
     Fdet      = Fdet - mFdet;
  end
  
- Ffit  = PolyfitW1(tspec,Fdet,Weight,Npf2);
+ Ffit  = PolyfitW1(tspek,Fdet,Weight,Npf2);
  rFdet = Fdet' - Ffit;
- Cf2   = PolyfitW1C(tspec,Fdet,Weight,Npf2);
+ Cf2   = PolyfitW1C(tspek,Fdet,Weight,Npf2);
  fprintf('    Std deviation: %f\n    SNR mean     : %f\n',std(rFdet),mean(SNR));
 
  if (Vexade == 1)
@@ -164,11 +165,11 @@ function [handles] = function_PLL(handles)
  
  fprintf('6- Store the frequency detections, residuals and SNR\n');
  ToneSNR   = SNR;                   % Store the SNR values to plot the results later
- tts       = tspec + StarT + Tskip; % Time of the spectra + Beg of scan
-
- Cfs2(1:Npp2,1)     = 0;
- Cpp2(1:Npp2+1,1)   = 0;
- Ffirst(1:Nspec) = 0;
+ tts       = tspek + StarT + Tskip; % Time of the spectra + Beg of scan
+            % tspec or tspeck -> I'm not sure if that's correct.
+ Cfs2(1:Npp2,1)    = 0;
+ Cpp2(1:Npp2+1,1)  = 0;
+ Ffirst(1:Nspek)   = 0;
  
  for jj=1:Npp2
     Cfs2(jj)   = Cf2(jj)*Tspan.^-(jj-1);
@@ -180,9 +181,9 @@ if (Npp1<Npp2)
     Cfs2(Npp1+1:Npp2)=0;
 end
 
-for jspec=1:Nspec
+for kk=1:Nspek
     for jj=2:Npp1
-        Ffirst(jspec) = Ffirst(jspec) + Cfs1(jj)*tspec(jspec)^(jj-1);
+        Ffirst(kk) = Ffirst(kk) + Cfs1(jj)*tspek(kk)^(jj-1);
     end
 end
 
@@ -195,7 +196,7 @@ end
 
 fprintf('7- Store the coefficients of the second polynomials\n');
 
-fdets     = zeros(Nspec,5);
+fdets     = zeros(Nspek,5);
 fdets(:,1)= tts;                % fdets store spectra time
 fdets(:,2)= SNR;                % SNR
 fdets(:,3)= Smax;               % Spectral MAX
@@ -305,7 +306,7 @@ spnoise = ssfp(Bsc-500:Bsc-100);
 SNR     = std(spnoise)^-1;
 dBSNR   = 10*log10(SNR);
 
-fprintf('     dBSNR   : %f\n    Fmax    : %f\n',dBSNR,fmax);
+fprintf('    dBSNR   : %f\n    Fmax    : %f\n',dBSNR,fmax);
 
 fprintf(2,'/**************************************************/\n');
 fprintf(2,'/If we take a close look to the tone bine now the  /\n');
@@ -486,5 +487,5 @@ handles.fs     = fs;
 handles.Fdet   = Fdet;
 handles.Ffit   = Ffit;
 handles.rFdet  = rFdet;
-handles.tspec  = tspec;
+handles.tspec  = tspek;
 end
