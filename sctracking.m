@@ -85,7 +85,8 @@ function swmenu_Callback(hObject, eventdata, handles)
       hold off;
       plot(handles.tsp,handles.Fdet,'ro');hold on;
       plot(handles.tsp,handles.Ffit,'-b','LineWidth',1.5);
-      axis auto;grid on;xlim([0 max(handles.tsp)]);legend('Fdet','Pfit');
+      axis auto;grid on;%xlim([0 max(handles.tsp)]);
+      legend('Fdet','Pfit');
       xlabel('Scan time [s]','Fontsize',11,'fontname','Times New Roman');
       ylabel('Frequency [Hz]','fontsize',11,'fontname','Times New Roman');
       title('Frequency detections and polyfit function','fontsize',11,'fontname','Times New Roman');
@@ -422,7 +423,7 @@ function SaveCpps_Callback(hObject, eventdata, handles)
     Cpr       = handles.Cpr0;
     Cfs       = handles.Cfs0;
     Tskip     = handles.skip;
-    file_lng  = 39;
+    file_lng  = 38;
     timebin   = strcat(handles.SpectraPath,handles.SpectraInput(1:file_lng),'_starttiming.txt');
     fid       = fopen(timebin,'r');
     top       = fgetl(fid);
@@ -439,11 +440,13 @@ function SaveCpps_Callback(hObject, eventdata, handles)
         spacecraft = 'mex';
     elseif (handles.SpectraInput(1) == 'h')
         spacecraft = 'her';
+    elseif (handles.SpectraInput(1) == 'c')
+        spacecraft = 'Ceo';
     end
  
     Start     = Tcinfo{1,2};
-    fdet      = zeros(handles.Nspec,5);
-    fdet(:,1) = handles.tsp + Start + Tskip;
+    fdet      = zeros(handles.Nspec-round(Tskip/handles.dts),5);
+    fdet(:,1) = handles.tsp + Start; %Tskip
     fdet(:,2) = handles.SNR;
     fdet(:,3) = handles.Smax;
     fdet(:,4) = handles.Fdet;
@@ -467,6 +470,8 @@ function SaveCpps_Callback(hObject, eventdata, handles)
         fprintf(fid,'// Base frequency: 2xxx.xx MHz \n');
     elseif (handles.SpectraInput(1) == 'h')
         fprintf(fid,'// Base frequency: 8468.50 MHz \n');
+    elseif (handles.SpectraInput(1) == 'c')
+        fprintf(fid,'// Base frequency: 8xxx.xx MHz \n');
     end
     
     fprintf(fid,'// Format : Time(UTC) [s]  | Signal-to-Noise ratio  |       Spectral max     |  Freq. detection [Hz]  |  Doppler noise [Hz] \n');

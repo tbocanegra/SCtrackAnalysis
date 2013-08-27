@@ -18,8 +18,8 @@ function [handles] = function_findCppCoef(handles)
  Npol     = handles.Npol;    % Polynomials grade
  dts      = handles.dts;     % Integrational time
  fftpoints= handles.fftpoints;
- t0       = 0;               % t1 not used (2012.08.20)
- b0       = t0/handles.dts+1;
+ t0       = handles.skip;               % t1 not used (2012.08.20)
+ b0       = round(t0/handles.dts)+1;
  b1       = handles.Nspec;
  Npf      = Npol-1;
  SR       = 2*BW;
@@ -29,11 +29,11 @@ function [handles] = function_findCppCoef(handles)
  Nfft     = fftpoints/2+1;
  jf       = 0:1:Nfft-1;
  ff       = df.*jf;
- tsp      = dts.*(0.5+(0:1:Nspec-1));      %(1:Nspec)
+ tsp      = dts.*(0.5+(b0-1:1:Nspec-1));      %(1:Nspec)
  ffs      = ff(bfs:bfe-1);
  Sps      = zeros(Nspec,bfe-bfs);
  AverSpec(1:Nfft) = 0;
- Vexade   = 0;
+ Vexade   = 1;
  
  % Opening the spectra file
  fid  = fopen(fileName);
@@ -67,20 +67,23 @@ function [handles] = function_findCppCoef(handles)
  Hwin  = 1e3;
  Avoid = 100;
  
- xfc(Nspec,3)  = 0;
- RMS(Nspec,3)  = 0;
- SNR(Nspec)    = 0;
- Fdet(Nspec)   = 0;
+ xfc(Nspec+1-b0,3)  = 0;
+ RMS(Nspec+1-b0,3)  = 0;
+ SNR(Nspec+1-b0)    = 0;
+ Fdet(Nspec+1-b0)   = 0;
+ size(Fdet)
+ kk                 = 1;
 
- for jj=1:Nspec
-	xfc(jj,:) = FindMax(Sps(jj,:),ffs,FsearchMinC,FsearchMaxC);
-    Smax(jj)  = xfc(jj,3);
-	Fdet(jj)  = df*(xfc(jj,2)-1) + ffs(1); 
-	RMS(jj,:) = GetRMS(Sps(jj,:),ffs,Fdet(jj),Hwin,Avoid);
-	SNR(jj)   = (xfc(jj,3)-RMS(jj,1))/RMS(jj,2);
+ for jj=b0:Nspec
+	xfc(kk,:) = FindMax(Sps(jj,:),ffs,FsearchMinC,FsearchMaxC);
+    Smax(kk)  = xfc(kk,3);
+	Fdet(kk)  = df*(xfc(kk,2)-1) + ffs(1); 
+	RMS(kk,:) = GetRMS(Sps(jj,:),ffs,Fdet(kk),Hwin,Avoid);
+	SNR(kk)   = (xfc(kk,3)-RMS(kk,1))/RMS(kk,2);
+    kk        = kk + 1;
  end
- 
- mSNR = mean(SNR);
+ kspec = kk-1;
+ mSNR  = mean(SNR);
  
  fprintf('\n');
  fprintf(2,'Min frequency for the SC detected is     : %s\n',min(Fdet));
@@ -89,14 +92,19 @@ function [handles] = function_findCppCoef(handles)
  fprintf(2,'Average of the SNRC through the spectras : %s\n',mSNR);
 
  %% Calculating the centre of the gravity correction
- Weight(1:Nspec) = 1;
+ Weight(1:kspec) = 1;
  %Weight = (SNR./mSNR).^2;
- dxc(1:Nspec)=0;
+ dxc(1:kspec) = 0;
+ size(Weight)
+ size(dxc)
+ kk           = 1;
  
- for jj=1:Nspec
-	dxc(jj) = PowCenter(Sps(jj,:),xfc(jj,2),3);
+ for jj=b0:Nspec
+     dxc(kk) = PowCenter(Sps(jj,:),xfc(kk,2),3);
+     kk      = kk + 1;
  end
-  
+ size(dxc)
+ 
  dxc    = dxc*df;
  FdetC  = Fdet + dxc;
  
@@ -106,6 +114,9 @@ function [handles] = function_findCppCoef(handles)
  end
  
  % Calculate the n-order polynomial fit and the coefficients
+ size(tsp)
+ size(FdetC)
+ size(Weight)
  Ffit         = PolyfitW1(tsp,FdetC,Weight,Npf);
  Cf           = PolyfitW1C(tsp,FdetC,Weight,Npf);
  RMSF         = wstdev(FdetC-Ffit,Weight);
