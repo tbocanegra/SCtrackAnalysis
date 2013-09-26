@@ -10,7 +10,7 @@
 
 function [handles] = function_PLL(handles)
  file_lng  = 39;
- Vexade    = 0;
+ Vexade    = 1;
  
  fprintf('1- Initialize the digital Phase-Locked-Loop\n');
  tonebin   = strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'_tonebinning.txt');
@@ -69,7 +69,7 @@ function [handles] = function_PLL(handles)
  fprintf('2- Read the the first polynomials coefficients\n');
 
  fn  = strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.poly',int2str(Npp1),'.txt');
- %fn  = strcat(handles.TonesPath,handles.TonesInput(1:23),'0320000pt_1s_ch1.poly',int2str(Npp1),'.txt');
+ %fn  = strcat(handles.TonesPath,handles.TonesInput(1:23),'320000pt_1s_ch1.poly',int2str(Npp1),'.txt');
  fid = fopen(fn);
  if (fid < 0)
     fprintf('Failed opening: %s',fn);
@@ -79,7 +79,7 @@ function [handles] = function_PLL(handles)
  fclose(fid);
 
  fn  = strcat(handles.TonesPath,handles.TonesInput(1:file_lng),'.X',int2str(Npp1-1),'cfs.txt'); 
- %fn  = strcat(handles.TonesPath,handles.TonesInput(1:23),'0320000pt_1s_ch1.X',int2str(Npp1-1),'cfs.txt');
+ %fn  = strcat(handles.TonesPath,handles.TonesInput(1:23),'320000pt_1s_ch1.X',int2str(Npp1-1),'cfs.txt');
  fid = fopen(fn);
  if (fid < 0)
     printf('Failed opening: %s',fn);
@@ -89,7 +89,7 @@ function [handles] = function_PLL(handles)
  fclose(fid);
 
  Nspav = Nav*Ovlp-(Ovlp-1);             % Number of spectra to average
- Nspec = floor(Nt/(Nfft*Nav));     % Number of spectra processed
+ Nspec = floor(Nt/(Nfft*Nav));          % Number of spectra processed
  Nspek = Nspec - skip;                  % Number of spectra - skip
  jspek = 0:1:Nspek-1;
  Bav   = Nfft*Nav;
@@ -302,7 +302,7 @@ Fmax    = 0.75*BWi;
 xf      = FindMax(ssfp,fto,Fmin,Fmax);
 fmax    = (xf(2)-1)*dfto;
 
-spnoise = ssfp(Bsc-500:Bsc-100);
+spnoise = ssfp(Bsc-300:Bsc-100);
 SNR     = std(spnoise)^-1;
 dBSNR   = 10*log10(SNR);
 

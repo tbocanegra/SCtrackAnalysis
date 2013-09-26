@@ -19,14 +19,28 @@ gui_State = struct('gui_Name',       mfilename, ...
 end
 
 % --- Executes just before sctracking is made visible.
-function sctracking_OpeningFcn(hObject, eventdata, handles, varargin)
+function sctracking_OpeningFcn(hObject, ~, handles, varargin)
  handles.output = hObject;
  guidata(hObject, handles);
  initialize_gui(hObject, handles, false);
+ %Initializing the parameters for SWspec
+ fsmin_Callback(hObject, 0, handles);
+ fsmax_Callback(hObject, 0, handles);
+ Nfft_box_Callback(hObject, 0, handles);
+ Nspectra_Callback(hObject, 0, handles);
+ 
+ Tones_fft_Callback(hObject,0,handles);
+ Time_scan_Callback(hObject,0,handles)
+ number_files_Callback(hObject,0,handles)
+ tonebw_value_Callback(hObject,0,handles)
+ outputbw_value_Callback(hObject,0,handles)
+ interbw_value_Callback(hObject,0,handles)
+ Npol1_box_Callback(hObject,0,handles)
+ Npol2_box_Callback(hObject,0,handles)
 end
 
 % --- Outputs from this function are returned to the command line.
-function varargout = sctracking_OutputFcn(hObject, eventdata, handles) 
+function varargout = sctracking_OutputFcn(hObject, ~, handles) 
  varargout{1} = handles.output;
  initialize_gui(gcbf, handles, true);
 end
@@ -41,7 +55,7 @@ end
 
 
 % --- Executes on selection change in swmenu.
-function swmenu_Callback(hObject, eventdata, handles)
+function swmenu_Callback(hObject, ~, handles)
  value = get(handles.swmenu, 'Value');
  handles.exp = 0;
   if (get(handles.ext_plot,'Value') == 1)
@@ -101,8 +115,8 @@ function swmenu_Callback(hObject, eventdata, handles)
       hold off;
       %set(gca,'Position',[0.13 0.18 0.8 0.72],'Units','normalized','fontsize',10,'fontname','Times New Roman');
       axis auto;
-      plot(0:handles.dts:(handles.Nspec-1)*handles.dts,handles.SNR,'r');
-      ylim([-10 max(handles.SNR)+100]);xlim([0 handles.Nspec]);
+      plot(0:handles.dts:(handles.Tend-1)*handles.dts,handles.SNR,'r');
+      ylim([-10 max(handles.SNR)+100]);xlim([0 handles.Tend]);
       title('SNR detection of the tone at 5 Hz','fontsize',11,'fontname','Times New Roman');
       xlabel('Scan time [s]','fontsize',11,'fontname','Times New Roman');
       ylabel('SNR','fontsize',11,'fontname','Times New Roman','Position',[-110 1500]);
@@ -110,9 +124,9 @@ function swmenu_Callback(hObject, eventdata, handles)
       text(20,300,label,'fontsize',10);grid on;
   elseif isequal(value, 8)
       hold off;
-      size(0:handles.dts:handles.Nspec-1)
+      size(0:handles.dts:handles.Tend-1)
       size(handles.Smax)
-      plot(0:handles.dts:(handles.Nspec-1)*handles.dts,handles.Smax,'b');
+      plot(0:handles.dts:(handles.Tend-1)*handles.dts,handles.Smax,'b');
       title('Spectral peak at each spectrum','fontsize',11,'fontname','Times New Roman');
       xlabel('Scan time [s]','fontsize',11,'fontname','Times New Roman');
       ylabel('Spectral peak','fontsize',11,'fontname','Times New Roman');
@@ -120,7 +134,7 @@ function swmenu_Callback(hObject, eventdata, handles)
 end
 
 % --- Executes on selection change in scmenu.
-function scmenu_Callback(hObject, eventdata, handles)
+function scmenu_Callback(hObject, ~, handles)
   Value = get(handles.scmenu, 'Value');
    handles.exp = 0;
   if (get(handles.ext_plot,'Value') == 1)
@@ -217,7 +231,7 @@ function scmenu_Callback(hObject, eventdata, handles)
   end
 end
 
-function cppmenu_Callback(hObject, eventdata, handles)
+function cppmenu_Callback(hObject, ~, handles)
     Value = get(handles.cppmenu, 'Value');
     if isequal(Value, 1)
          set(handles.Cpr_values,'String',handles.Cf0');
@@ -229,164 +243,162 @@ function cppmenu_Callback(hObject, eventdata, handles)
     guidata(hObject,handles);
 end
 
-function cppmenu_CreateFcn(hObject, eventdata, handles)
+function cppmenu_CreateFcn(hObject, ~, handles)
  if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
  end
 end
 
-% --- Executes during object creation, after setting all properties.
-function swmenu_CreateFcn(hObject, eventdata, handles)
+function swmenu_CreateFcn(hObject, ~, handles)
  if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
  end
 end
 
-% --- Executes during object creation, after setting all properties.
-function scmenu_CreateFcn(hObject, eventdata, handles)
+function scmenu_CreateFcn(hObject, ~, handles)
  if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
  end
 end
 
+function fsmin_CreateFcn(hObject, ~, handles)
+ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+ end
+end
 
+function fsmax_CreateFcn(hObject, ~, handles)
+ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+ end
+end
 
-function fsmin_Callback(hObject, eventdata, handles)
+function Nfft_box_CreateFcn(hObject, ~, handles)
+ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+ end
+end
+
+function Nspectra_CreateFcn(hObject, ~, handles)
+ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+ end
+end
+
+function BandWidth_CreateFcn(hObject, ~, handles)
+ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+ end
+end
+
+function Cpr_values_CreateFcn(hObject, ~, handles)
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+end
+
+function Npol_box_CreateFcn(hObject, ~, handles)
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+end
+
+function Tint_CreateFcn(hObject, ~, handles)
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+end
+
+function skip_box_CreateFcn(hObject, ~, handles)
+ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+ end
+end
+
+function fsmin_Callback(hObject, ~, handles)
   handles.Fsmin = str2double(get(handles.fsmin,'String'));
   guidata(hObject, handles);
 end
 
-% --- Executes during object creation, after setting all properties.
-function fsmin_CreateFcn(hObject, eventdata, handles)
- if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
- end
-end
-
-
-function fsmax_Callback(hObject, eventdata, handles)
+function fsmax_Callback(hObject, ~, handles)
  handles.Fsmax = str2double(get(handles.fsmax,'String'));
  guidata(hObject, handles);
 end
 
-function fsmax_CreateFcn(hObject, eventdata, handles)
- if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
- end
-end
-
-
-function Nspectra_Callback(hObject, eventdata, handles)
- handles.Nspec = str2double(get(handles.Nspectra,'String'));
- guidata(hObject, handles);
-end
-
-% --- Executes during object creation, after setting all properties.
-function Nspectra_CreateFcn(hObject, eventdata, handles)
- if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
- end
-end
-
-function BandWidth_Callback(hObject, eventdata, handles)
- handles.BW = str2double(get(handles.BandWidth,'String'));
- guidata(hObject, handles);
-end
-
-% --- Executes during object creation, after setting all properties.
-function BandWidth_CreateFcn(hObject, eventdata, handles)
- if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
- end
-end
-
-function Cpr_values_Callback(hObject, eventdata, handles)
-    set(handles.Cpr_values,'String',handles.Cpr0');
-    guidata(hObject,handles);
-end
-
-% --- Executes during object creation, after setting all properties.
-function Cpr_values_CreateFcn(hObject, eventdata, handles)
-    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-        set(hObject,'BackgroundColor','white');
-    end
-end
-
-%% GENERAL BOXES
-
-function Nfft_box_Callback(hObject, eventdata, handles)
+function Nfft_box_Callback(hObject, ~, handles)
  handles.fftpoints = str2double(get(handles.Nfft_box,'String'));
  guidata(hObject, handles);
 end
 
-function Nfft_box_CreateFcn(hObject, eventdata, handles)
- if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
- end
+function Nspectra_Callback(hObject, ~, handles)
+ handles.Tend = str2double(get(handles.Nspectra,'String'));
+ guidata(hObject, handles);
 end
 
-function Npol_box_Callback(hObject, eventdata, handles)
+function skip_box_Callback(hObject, ~, handles)
+    handles.Tskip = str2double(get(handles.skip_box,'String'));
+    guidata(hObject,handles);
+end
+
+function BandWidth_Callback(hObject, ~, handles)
+ handles.BW = str2double(get(handles.BandWidth,'String'));
+ guidata(hObject, handles);
+end
+
+function Tint_Callback(hObject, ~, handles)
+    handles.dts = str2double(get(handles.Tint,'String'));
+    guidata(hObject, handles);
+end
+
+function Npol_box_Callback(hObject, ~, handles)
     handles.Npol = str2double(get(handles.Npol_box,'String'));
     guidata(hObject, handles);
 end
 
-function Npol_box_CreateFcn(hObject, eventdata, handles)
-    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-        set(hObject,'BackgroundColor','white');
-    end
+function Cpr_values_Callback(hObject, ~, handles)
+    set(handles.Cpr_values,'String',handles.Cpr0');
+    guidata(hObject,handles);
 end
 
-function Tint_Callback(hObject, eventdata, handles)
-    handles.dts = str2double(get(handles.Tint,'String'));
-    guidata(hObject, handles);
-end
-function Tint_CreateFcn(hObject, eventdata, handles)
-    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-        set(hObject,'BackgroundColor','white');
-    end
-end
+%% GENERAL BOXES
 
-function SWInput_CreateFcn(hObject, eventdata, handles)
+function SWInput_CreateFcn(hObject, ~, handles)
  if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white'); 
  end
 end
 
-function SCInputText_CreateFcn(hObject, eventdata, handles)
+function SCInputText_CreateFcn(hObject, ~, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 end
 
-function TonesInputText_CreateFcn(hObject, eventdata, handles)
+function TonesInputText_CreateFcn(hObject, ~, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 end
 
-% --- Executes on button press in SelectSWFile.
-function SelectSWFile_Callback(hObject, eventdata, handles)
+function SelectSWFile_Callback(hObject, ~, handles)
  [handles.SpectraInput,handles.SpectraPath] = uigetfile('*.bin','Select the Spectra binary file');
  set(handles.SWInput,'String',handles.SpectraInput);
  guidata(hObject, handles);
 end
 
-% --- Executes on button press in SelectSCFile.
-function SelectSCFile_Callback(hObject, eventdata, handles)
+function SelectSCFile_Callback(hObject, ~, handles)
  [handles.SCSpectraInput, handles.SCSpectraPath] = uigetfile('*.bin','Select the S/C binary file');
  set(handles.SCInputText,'String',handles.SpectraInput);
  guidata(hObject, handles);
 end
 
-% --- Executes on button press in SelectToneFile.
-function SelectToneFile_Callback(hObject, eventdata, handles)
+function SelectToneFile_Callback(hObject, ~, handles)
  [handles.TonesInput, handles.TonesPath] = uigetfile('*.bin','Select the Tone file');
  set(handles.TonesInputText, 'String',handles.TonesInput);
  guidata(hObject, handles);
 end
 
-% --- Executes on button press in SelectPhasesFile.
-function SelectPhasesFile_Callback(hObject, eventdata, handles)
+function SelectPhasesFile_Callback(hObject, ~, handles)
  [handles.PhasesInput,handles.PhasesPath] = uigetfile('*.txt','Select the Phases text file');
  set(handles.PhasesInputText,'String',handles.PhasesInput);
  guidata(hObject, handles);
@@ -394,7 +406,7 @@ end
 
 %% BUTTON ACTIONS
 
-function CheckSpectra_Callback(hObject, eventdata, handles)
+function CheckSpectra_Callback(hObject, ~, handles)
     fsmin_Callback(hObject, 0, handles);
     fsmax_Callback(hObject, 0, handles);
     Nspectra_Callback(hObject, 0 , handles);
@@ -406,7 +418,7 @@ function CheckSpectra_Callback(hObject, eventdata, handles)
     guidata(hObject,handles);
 end
 
-function CalcCpp_Callback(hObject, eventdata, handles)
+function CalcCpp_Callback(hObject, ~, handles)
     Npol_box_Callback(hObject, 0, handles);
     fsmin_Callback(hObject, 0, handles);
     fsmax_Callback(hObject, 0, handles);
@@ -419,11 +431,11 @@ function CalcCpp_Callback(hObject, eventdata, handles)
     guidata(hObject,handles);
 end
 
-function SaveCpps_Callback(hObject, eventdata, handles)
+function SaveCpps_Callback(hObject, ~, handles)
     Cpr       = handles.Cpr0;
     Cfs       = handles.Cfs0;
-    Tskip     = handles.skip;
-    file_lng  = 38;
+    Tskip     = handles.Tskip;
+    file_lng  = 39;
     timebin   = strcat(handles.SpectraPath,handles.SpectraInput(1:file_lng),'_starttiming.txt');
     fid       = fopen(timebin,'r');
     top       = fgetl(fid);
@@ -445,8 +457,8 @@ function SaveCpps_Callback(hObject, eventdata, handles)
     end
  
     Start     = Tcinfo{1,2};
-    fdet      = zeros(handles.Nspec-round(Tskip/handles.dts),5);
-    fdet(:,1) = handles.tsp + Start; %Tskip
+    fdet      = zeros(round((handles.Tend-handles.Tskip)/handles.dts),5);
+    fdet(:,1) = handles.tsp + Start + Tskip;
     fdet(:,2) = handles.SNR;
     fdet(:,3) = handles.Smax;
     fdet(:,4) = handles.Fdet;
@@ -483,19 +495,19 @@ function SaveCpps_Callback(hObject, eventdata, handles)
     guidata(hObject,handles);
 end
 
-function CheckPhases_Callback(hObject, eventdata, handles)
+function CheckPhases_Callback(hObject, ~, handles)
     handles = function_checkPhase(handles);
     fprintf('Checking the resultant phase of the signal\n');
     guidata(hObject,handles);
 end
 
-function checktones_Callback(hObject, eventdata, handles)
+function checktones_Callback(hObject, ~, handles)
     handles = function_checkTones(handles);
     fprintf('Tones analysis finished\n');
     guidata(hObject, handles);
 end
 
-function runPLL_Callback(hObject, eventdata, handles)
+function runPLL_Callback(hObject, ~, handles)
     fprintf('Running the PLL with 20 Hz around the tone\n');
     handles = function_PLL(handles);
     %fprintf('Analysis finalized\n');
@@ -505,44 +517,17 @@ end
 %% CHECK BOX
 
 % --- Executes on button press in ext_plot.
-function ext_plot_Callback(hObject, eventdata, handles)
-    if ( get(handles.ext_plot,'Value') == 1)
-        handles.plot = 1 ;
+function ext_plot_Callback(hObject, ~, handles)
+    if (get(handles.ext_plot,'Value') == 1)
+        handles.plot = 1;
     else
         handles.plot = 0;
     end
    guidata(hObject, handles);
 end
 
-
-
-function Tones_fft_Callback(hObject, eventdata, handles)
-    handles.tfft = str2double(get(handles.Tones_fft,'String'));
-    guidata(hObject, handles);   
-end
-
-% --- Executes during object creation, after setting all properties.
-function Tones_fft_CreateFcn(hObject, eventdata, handles)
-    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-     set(hObject,'BackgroundColor','white');
-    end
-end
-
-function Time_scan_Callback(hObject, eventdata, handles)
-    handles.ts = str2double(get(handles.Time_scan,'String'));
-    guidata(hObject, handles);
-end
-
-% --- Executes during object creation, after setting all properties.
-function Time_scan_CreateFcn(hObject, eventdata, handles)
-    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-        set(hObject,'BackgroundColor','white');
-    end
-end
-
-
 % --- Executes on selection change in cpp1menu.
-function cpp1menu_Callback(hObject, eventdata, handles)
+function cpp1menu_Callback(hObject, ~, handles)
 Value = get(handles.cpp1menu, 'Value');
     if isequal(Value, 1)
          set(handles.Cpr1_values,'String',handles.Cf1');
@@ -555,95 +540,98 @@ Value = get(handles.cpp1menu, 'Value');
 end
 
 % --- Executes during object creation, after setting all properties.
-function cpp1menu_CreateFcn(hObject, eventdata, handles)
+function Time_scan_CreateFcn(hObject, ~, handles)
     if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
         set(hObject,'BackgroundColor','white');
     end
 end
 
-
-function number_files_Callback(hObject, eventdata, handles)
-    handles.nfiles = str2double(get(handles.number_files,'String'));
-    guidata(hObject,handles);
+function Tones_fft_CreateFcn(hObject, ~, handles)
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+     set(hObject,'BackgroundColor','white');
+    end
 end
 
-% --- Executes during object creation, after setting all properties.
+function cpp1menu_CreateFcn(hObject, ~, handles)
+ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+ end
+end
+
 function number_files_CreateFcn(hObject, eventdata, handles)
  if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
  end
 end
 
-
-
-function tonebw_value_Callback(hObject, eventdata, handles)
-    handles.tonebw = str2double(get(handles.tonebw_value,'String'));
-    guidata(hObject,handles);
+function tonebw_value_CreateFcn(hObject, ~, handles)
+ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+ end
 end
 
-function tonebw_value_CreateFcn(hObject, eventdata, handles)
+function outputbw_value_CreateFcn(hObject, ~, handles)
+ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+ end
+end
+
+function interbw_value_CreateFcn(hObject, ~, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 end
 
-
-function outputbw_value_Callback(hObject, eventdata, handles)
-    handles.tonebw_out = str2double(get(handles.outputbw_value,'String'));
-    guidata(hObject,handles);
-end
-
-function outputbw_value_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-end
-
-function interbw_value_Callback(hObject, eventdata, handles)
-    handles.tonebw_if = str2double(get(handles.interbw_value,'String'));
-    guidata(hObject,handles);
-end
-
-function interbw_value_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-end
-
-function Npol2_box_Callback(hObject, eventdata, handles)
-    handles.Npol2 = str2double(get(handles.Npol2_box,'String'));
-    guidata(hObject,handles);
-end
-
-function Npol2_box_CreateFcn(hObject, eventdata, handles)
+function Npol2_box_CreateFcn(hObject, ~, handles)
  if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
      set(hObject,'BackgroundColor','white');
  end
 end
 
-function skip_box_Callback(hObject, ~, handles)
-    handles.skip = str2double(get(handles.skip_box,'String'));
-    guidata(hObject,handles);
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function skip_box_CreateFcn(hObject, ~, handles)
- if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
- end
-end
-
-
-
-function Npol1_box_Callback(hObject, eventdata, handles)
-    handles.Npol1 = str2double(get(handles.Npol1_box,'String'));
-    guidata(hObject,handles);
-end
-
-% --- Executes during object creation, after setting all properties.
-function Npol1_box_CreateFcn(hObject, eventdata, handles)
+function Npol1_box_CreateFcn(hObject, ~, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 end
+
+function Tones_fft_Callback(hObject, ~, handles)
+    handles.tfft = str2double(get(handles.Tones_fft,'String'));
+    guidata(hObject, handles);   
+end
+
+
+function Time_scan_Callback(hObject, ~, handles)
+    handles.ts = str2double(get(handles.Time_scan,'String'));
+    guidata(hObject, handles);
+end
+
+function number_files_Callback(hObject, ~, handles)
+    handles.nfiles = str2double(get(handles.number_files,'String'));
+    guidata(hObject,handles);
+end
+
+function tonebw_value_Callback(hObject, ~, handles)
+    handles.tonebw = str2double(get(handles.tonebw_value,'String'));
+    guidata(hObject,handles);
+end
+
+function outputbw_value_Callback(hObject, ~, handles)
+    handles.tonebw_out = str2double(get(handles.outputbw_value,'String'));
+    guidata(hObject,handles);
+end
+
+function interbw_value_Callback(hObject, ~, handles)
+    handles.tonebw_if = str2double(get(handles.interbw_value,'String'));
+    guidata(hObject,handles);
+end
+
+function Npol2_box_Callback(hObject, ~, handles)
+    handles.Npol2 = str2double(get(handles.Npol2_box,'String'));
+    guidata(hObject,handles);
+end
+
+function Npol1_box_Callback(hObject, ~, handles)
+    handles.Npol1 = str2double(get(handles.Npol1_box,'String'));
+    guidata(hObject,handles);
+end
+

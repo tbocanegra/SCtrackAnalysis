@@ -10,7 +10,7 @@
 
 function [handles] = function_checkSCsignal(handles)
  fileName   = strcat(handles.SpectraPath,handles.SpectraInput);
- Nspec      = handles.Nspec;
+ Nspec      = round(handles.Tend/handles.dts);
  Fmin       = handles.Fsmin;
  Fmax       = handles.Fsmax;
  BW         = handles.BW;
