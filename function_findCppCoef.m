@@ -13,14 +13,15 @@ function [handles] = function_findCppCoef(handles)
 
  format long g;
  fileName = strcat(handles.SpectraPath,handles.SpectraInput);
- Nspec    = handles.Nspec;
+ Nspec    = round(handles.Tend/handles.dts);
  BW       = handles.BW;
  Npol     = handles.Npol;    % Polynomials grade
  dts      = handles.dts;     % Integrational time
  fftpoints= handles.fftpoints;
- t0       = handles.skip;               % t1 not used (2012.08.20)
+ t0       = handles.Tskip;               % t1 not used (2012.08.20)
+ t1       = handles.Tend;
  b0       = round(t0/handles.dts)+1;
- b1       = handles.Nspec;
+ b1       = Nspec;
  Npf      = Npol-1;
  SR       = 2*BW;
  df       = SR/fftpoints;
@@ -30,6 +31,7 @@ function [handles] = function_findCppCoef(handles)
  jf       = 0:1:Nfft-1;
  ff       = df.*jf;
  tsp      = dts.*(0.5+(b0-1:1:Nspec-1));      %(1:Nspec)
+ tsp      = tsp-b0;
  ffs      = ff(bfs:bfe-1);
  Sps      = zeros(Nspec,bfe-bfs);
  AverSpec(1:Nfft) = 0;
@@ -70,8 +72,8 @@ function [handles] = function_findCppCoef(handles)
  xfc(Nspec+1-b0,3)  = 0;
  RMS(Nspec+1-b0,3)  = 0;
  SNR(Nspec+1-b0)    = 0;
+ Smax(Nspec+1-b0)   = 0;
  Fdet(Nspec+1-b0)   = 0;
- size(Fdet)
  kk                 = 1;
 
  for jj=b0:Nspec
@@ -95,15 +97,12 @@ function [handles] = function_findCppCoef(handles)
  Weight(1:kspec) = 1;
  %Weight = (SNR./mSNR).^2;
  dxc(1:kspec) = 0;
- size(Weight)
- size(dxc)
  kk           = 1;
  
  for jj=b0:Nspec
      dxc(kk) = PowCenter(Sps(jj,:),xfc(kk,2),3);
      kk      = kk + 1;
  end
- size(dxc)
  
  dxc    = dxc*df;
  FdetC  = Fdet + dxc;
@@ -114,9 +113,6 @@ function [handles] = function_findCppCoef(handles)
  end
  
  % Calculate the n-order polynomial fit and the coefficients
- size(tsp)
- size(FdetC)
- size(Weight)
  Ffit         = PolyfitW1(tsp,FdetC,Weight,Npf);
  Cf           = PolyfitW1C(tsp,FdetC,Weight,Npf);
  RMSF         = wstdev(FdetC-Ffit,Weight);
